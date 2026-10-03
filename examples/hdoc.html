@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example HDOC</title>
+
+    <!-- Reader's Web reader UI. In production these point at the uploaded rw-reader/ folder. -->
+    <link rel="stylesheet" href="../dist/rw-reader/rw-reader.css">
+    <link rel="stylesheet" href="../dist/rw-reader/themes/light.css">
+    <script defer src="../dist/rw-reader/rw-reader.js" data-font-set="default"></script>
+</head>
+
+<body>
+
+<div id="ui-root" class="theme-light">
+    <div id="AllDocumentsContainer">
+        <div id="OneDocumentContainer">
+
+            <div id="CurrentDocumentTopBar">
+                <div id="CurrentDocumentTopBarRow">
+
+                    <div id="CurrentDocumentInfoButtonWrapper" class="DocumentTopBarButtonWrapper">
+                        <div title="Page info" id="CurrentDocumentInfoButton-rw" class="DocumentTopBarButton" href="#">
+                            <span id="CurrentDocumentInfoButtonCountDiv" class="CurrentDocumentTopButtonCountDiv"></span>
+                        </div>
+                    </div>
+
+                    <div title="Download all connected documents" id="CurrentDocumentDownloadAllDocsButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Toggle full screen" id="CurrentDocumentFullScreenButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Export connections" id="CurrentDocumentExportButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Veiw source" id="CurrentDocumentSourceCodeButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Center collage" id="CurrentDocumentCenterCollageButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Learn about Reader's Web" id="PromotionButton" class="DocumentTopBarButtonWrapper"></div>
+
+                    <div class="spacer10px"></div>
+
+                    <div class="TitleContainer">
+                        <span id="CurrentDocumentOptionalTitleSpan" style="display: none;"></span>
+                        <a id="CurrentDocumentTitleLink" href="#"><span id="CurrentDocumentTitleSpan-rw" class="DocumentTitleSpan"></span></a>
+                    </div>
+
+                    <div id="CurrentDocumentCopyButton" class="DocumentTopBarButtonWrapper" title="This document is a copy of another document."></div>
+
+                    <div id="CurrentDocumentEmbeddingSymbol" class="DocumentTopBarButtonWrapper" title="This document embeds another document. Click on the title to view the embedded document separately."></div>
+
+                    <div id="mainDocSpinner"></div>
+                </div>
+            </div>
+
+            <div id="CurrentDocumentMainRow" class="DocumentMainRow">
+
+                <div id="CurrentDocument" class="DocumentColumn">
+                    <div id="CurrentDocumentTopPanel" class="DocumentTopPanel">
+                        <a id="CurrentDocumentTopPanelLogoLink" class="TopPanelLogoLink" href="http://localhost:8000/examples/hdoc.html">
+                            <img id="CurrentDocumentTopPanelLogo" src="" width="150px" height="50px" style="display:none"/>
+                            <span id="CurrentDocumentTopPanelTitle" class="TopPanelTitle">RW Reader in HTML</span>
+                        </a>
+                        <div class="spacer"></div>
+                        <div id="CurrentDocumentTopPanelOptionsRow" class="DocumentTopPanelOptionsRow"><a href="http://localhost:8000/examples/cdoc.html">Collage</a><a href="http://localhost:8000/examples/condoc.html">Condoc</a></div>
+                        <div id="LeftSandwichButton" class="SandwichButton">
+                            <div class="LeftSandwichLine"></div>
+                            <div class="LeftSandwichLine SandwichMiddleLine"></div>
+                            <div class="LeftSandwichLine"></div>
+                        </div>
+                    </div>
+
+                    <div id="CurrentDocumentInnerRow">
+
+                        <div id="CurrentDocumentBody">
+                            <div id="CurrentDocumentHeader" class="HeaderDiv"><h1>Example HDOC</h1></div>
+                            <div id="CurrentDocumentMainDiv" class="PresentationDiv hdoc-content">
+                                <p>This page is an Embedded HDOC shown in the Reader's Web reader UI. It is a plain HTML file: the reader script, its styles and a theme are loaded from a shared asset folder, and everything else lives in this file.</p><h2>Connections</h2><p>A visible connection links this sentence to a circle on a small collage.</p><p>Another connection links this sentence to a square on the same collage.</p><p>Visitors who have the RW Reader extension installed get the extension's own reader instead, because the page also carries the embedded HDOC data.</p><p>The last connection points to a page on another site. This static host has no proxy, so opening it shows an alert.</p>
+                            </div>
+                        </div>
+
+                        <div id="CurrentDocumentSidebar" class="SideBar"><h3>Examples</h3><ul><li><a href="http://localhost:8000/examples/hdoc.html">HDOC</a></li><li><a href="http://localhost:8000/examples/cdoc.html">CDOC</a></li><li><a href="http://localhost:8000/examples/condoc.html">CONDOC</a></li></ul></div>
+
+                    </div>
+
+                    <div id="CurrentDocumentBelowContentComments" class="BelowContentComments" style="display:none"></div>
+
+                    <div id="CurrentDocumentBottomBar" class="BottomBar"></div>
+
+                    <div id="CurrentDocumentPostNavBar" class="PostNavBar" style="display:flex"><div class="PostNavBarSide" style="justify-content:flex-start"></div><div class="PostNavBarSide" style="justify-content:flex-end"><a href="http://localhost:8000/examples/cdoc.html">Example CDOC</a></div></div>
+
+                    <div id="CurrentDocumentBottomPanel" class="DocumentBottomPanel">
+                        <div id="CurrentDocumentBottomPanelRow" class="DocumentBottomPanelRow"><section title="Examples"><a href="http://localhost:8000/examples/cdoc.html">Collage</a><a href="http://localhost:8000/examples/condoc.html">Condoc</a></section><section title="Reader's Web"><a href="https://github.com/kgcoder/readers-web-specs">Specifications</a></section></div>
+                        <div id="CurrentDocumentBottomPanelBottomMessage" class="DocumentBottomPanelBottomMessage">Static example page</div>
+                    </div>
+                    <div id="CurrentDocumentMainCollageDiv">
+                        <canvas id="CurrentDocumentMainCollageCanvas" class="OneCollageCanvas"></canvas>
+                    </div>
+                    <div id="CurrentDocumentDropDownMenu" class="DocumentDropDownMenu"></div>
+                </div>
+
+                <div id="CurrentDocumentInfoContainer">
+                    <div id="CurrentDocumentInfo"></div>
+                </div>
+
+                <div id="CurrentDocumentExportContainer"></div>
+
+            </div>
+
+        </div>
+
+        <div id="middle-canvas-topDiv">
+            <svg id="svgArrow" width="28" height="12" viewBox="0 0 28 12" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+            <a title="List of floating links" id="LinksOpenButton"></a>
+        </div>
+
+        <div id="middle-space-div"></div>
+
+        <div id="AllRightDocumentsContainer">
+            <div id="RightDocumentsTabsContainer"></div>
+            <div id="RightDocumentsTopBar">
+                <div title="Veiw source" id="RightDocumentSourceCodeButton" class="DocumentTopBarButtonWrapper"></div>
+                <div title="Center collage" id="RightDocumentCenterCollageButton" class="DocumentTopBarButtonWrapper"></div>
+
+                <div class="spacer10px"></div>
+
+                <div class="TitleContainer">
+                    <span id="RightDocumentOptionalTitleSpan" style="display: none;"></span>
+                    <a id="RightDocumentTitleLink"><span id="RightDocumentTitleSpan" class="DocumentTitleSpan"></span></a>
+                </div>
+
+                <div id="RightDocumentCopyButton" class="DocumentTopBarButtonWrapper" title="This document is a copy of another document."></div>
+
+            </div>
+            <div id="RightDocumentCollectionContainer"></div>
+            <div id="RightDocumentExportContainer"></div>
+        </div>
+
+        <canvas id="flinks-canvas"></canvas>
+    </div>
+
+    <div id="LinksListContainerDiv">
+        <div id="LinksListTopRow">
+            <div id="LinksListTopRowLeftSortButtonContainer"></div>
+            <div id="LinksListTopRowMiddleSpacer"></div>
+            <div id="LinksListTopRowRightSortButtonContainer"></div>
+            <div id="LinksListTopRowEndSpacer"></div>
+        </div>
+        <div id="FlinksScrollDiv" class="scroll-container"></div>
+        <span id="LinksListModificationMessage">Floating links were modified</span>
+        <div id="LinksListBottomRow">
+            <button id="LinksListCloseButton" class="CancelButton">Close</button>
+            <div class="LinksListBottomRowMiddleSpacer"></div>
+            <button id="LinksListOriginalLinksButton" class="CancelButton">Show original flinks</button>
+            <div id="LinksListOriginalLinksSpacer" class="LinksListBottomRowMiddleSpacer"></div>
+            <button id="LinksListFixButton" class="ActionButton">Fix all</button>
+        </div>
+    </div>
+
+    <div id="spinner" class="spinner"></div>
+    <div id="CurrentUrl"></div>
+    <div id="multiple-links-popup"></div>
+</div>
+
+<script type="application/json" id="hdoc-data">
+{
+  "lang": "en",
+  "forced": true,
+  "header": {
+    "h1": "Example HDOC",
+    "author": "Example Author",
+    "date": "October 3, 2026"
+  },
+  "panels": {
+    "top": {
+      "site-name": {
+        "text": "RW Reader in HTML",
+        "href": "http://localhost:8000/examples/hdoc.html"
+      },
+      "links": [
+        {
+          "href": "http://localhost:8000/examples/cdoc.html",
+          "text": "Collage"
+        },
+        {
+          "href": "http://localhost:8000/examples/condoc.html",
+          "text": "Condoc"
+        }
+      ]
+    },
+    "post-nav": {
+      "next": {
+        "href": "http://localhost:8000/examples/cdoc.html",
+        "title": "Example CDOC"
+      }
+    },
+    "sidebar": {
+      "side": "right",
+      "items": [
+        {
+          "type": "links",
+          "title": "Examples",
+          "items": [
+            {
+              "href": "http://localhost:8000/examples/hdoc.html",
+              "text": "HDOC"
+            },
+            {
+              "href": "http://localhost:8000/examples/cdoc.html",
+              "text": "CDOC"
+            },
+            {
+              "href": "http://localhost:8000/examples/condoc.html",
+              "text": "CONDOC"
+            }
+          ]
+        }
+      ]
+    },
+    "bottom": {
+      "sections": [
+        {
+          "title": "Examples",
+          "links": [
+            {
+              "href": "http://localhost:8000/examples/cdoc.html",
+              "text": "Collage"
+            },
+            {
+              "href": "http://localhost:8000/examples/condoc.html",
+              "text": "Condoc"
+            }
+          ]
+        },
+        {
+          "title": "Reader's Web",
+          "links": [
+            {
+              "href": "https://github.com/kgcoder/readers-web-specs",
+              "text": "Specifications"
+            }
+          ]
+        }
+      ],
+      "bottom-message": "Static example page"
+    }
+  },
+  "connections": [
+    {
+      "url": "http://localhost:8000/examples/cdoc.html",
+      "title": "Example CDOC",
+      "flinks": [
+        "i:244;l:50;h:c70e7b;e:bGU=_p|x:200;y:260;r:8",
+        "i:314;l:51;h:985c98;e:bGU=_p|x:560;y:260;r:8"
+      ]
+    },
+    {
+      "url": "https://example.com/",
+      "title": "Example Domain",
+      "flinks": [
+        "i:531;l:32;h:5fcb71;e:cGU=_i:0;l:14;h:162b81;e:RW4="
+      ]
+    }
+  ]
+}
+</script>
+
+</body>
+</html>

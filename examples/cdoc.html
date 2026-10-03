@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Example CDOC</title>
+
+    <!-- Reader's Web reader UI. In production these point at the uploaded rw-reader/ folder. -->
+    <link rel="stylesheet" href="../dist/rw-reader/rw-reader.css">
+    <link rel="stylesheet" href="../dist/rw-reader/themes/light.css">
+    <script defer src="../dist/rw-reader/rw-reader.js" data-font-set="default"></script>
+</head>
+
+<body>
+
+<div id="ui-root" class="theme-light">
+    <div id="AllDocumentsContainer">
+        <div id="OneDocumentContainer">
+
+            <div id="CurrentDocumentTopBar">
+                <div id="CurrentDocumentTopBarRow">
+
+                    <div id="CurrentDocumentInfoButtonWrapper" class="DocumentTopBarButtonWrapper">
+                        <div title="Page info" id="CurrentDocumentInfoButton-rw" class="DocumentTopBarButton" href="#">
+                            <span id="CurrentDocumentInfoButtonCountDiv" class="CurrentDocumentTopButtonCountDiv"></span>
+                        </div>
+                    </div>
+
+                    <div title="Download all connected documents" id="CurrentDocumentDownloadAllDocsButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Toggle full screen" id="CurrentDocumentFullScreenButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Export connections" id="CurrentDocumentExportButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Veiw source" id="CurrentDocumentSourceCodeButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Center collage" id="CurrentDocumentCenterCollageButton" class="DocumentTopBarButtonWrapper"></div>
+                    <div title="Learn about Reader's Web" id="PromotionButton" class="DocumentTopBarButtonWrapper"></div>
+
+                    <div class="spacer10px"></div>
+
+                    <div class="TitleContainer">
+                        <span id="CurrentDocumentOptionalTitleSpan" style="display: none;"></span>
+                        <a id="CurrentDocumentTitleLink" href="#"><span id="CurrentDocumentTitleSpan-rw" class="DocumentTitleSpan"></span></a>
+                    </div>
+
+                    <div id="CurrentDocumentCopyButton" class="DocumentTopBarButtonWrapper" title="This document is a copy of another document."></div>
+
+                    <div id="CurrentDocumentEmbeddingSymbol" class="DocumentTopBarButtonWrapper" title="This document embeds another document. Click on the title to view the embedded document separately."></div>
+
+                    <div id="mainDocSpinner"></div>
+                </div>
+            </div>
+
+            <div id="CurrentDocumentMainRow" class="DocumentMainRow">
+
+                <div id="CurrentDocument" class="DocumentColumn">
+                    <div id="CurrentDocumentTopPanel" class="DocumentTopPanel" style="display:none">
+                        <a id="CurrentDocumentTopPanelLogoLink" class="TopPanelLogoLink" href="#">
+                            <img id="CurrentDocumentTopPanelLogo" src="" width="150px" height="50px" style="display:none"/>
+                            <span id="CurrentDocumentTopPanelTitle" class="TopPanelTitle" style="display:none"></span>
+                        </a>
+                        <div class="spacer"></div>
+                        <div id="CurrentDocumentTopPanelOptionsRow" class="DocumentTopPanelOptionsRow"></div>
+                        <div id="LeftSandwichButton" class="SandwichButton">
+                            <div class="LeftSandwichLine"></div>
+                            <div class="LeftSandwichLine SandwichMiddleLine"></div>
+                            <div class="LeftSandwichLine"></div>
+                        </div>
+                    </div>
+
+                    <div id="CurrentDocumentInnerRow">
+
+                        <div id="CurrentDocumentBody">
+                            <div id="CurrentDocumentHeader" class="HeaderDiv"><h1>Example CDOC</h1></div>
+                            <div id="CurrentDocumentMainDiv" class="PresentationDiv">
+                                <script type="application/json" style="display:none;" id="cdoc-source">{"source": "<cdoc>\n\n<metadata>\n<title>Example CDOC<\/title>\n<\/metadata>\n\n<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"800\" height=\"500\">\n  <rect x=\"0\" y=\"0\" width=\"800\" height=\"500\" fill=\"#f4f1ea\"/>\n  <polygon points=\"400,60 414,96 452,96 421,118 433,154 400,132 367,154 379,118 348,96 386,96\" fill=\"#e0a526\"/>\n  <text x=\"400\" y=\"190\" font-size=\"20\" font-family=\"sans-serif\" text-anchor=\"middle\" fill=\"#333\">star (CONDOC)<\/text>\n  <circle cx=\"200\" cy=\"260\" r=\"80\" fill=\"#3a7bd5\"/>\n  <text x=\"200\" y=\"380\" font-size=\"20\" font-family=\"sans-serif\" text-anchor=\"middle\" fill=\"#333\">circle<\/text>\n  <rect x=\"480\" y=\"180\" width=\"160\" height=\"160\" fill=\"#d5533a\"/>\n  <text x=\"560\" y=\"380\" font-size=\"20\" font-family=\"sans-serif\" text-anchor=\"middle\" fill=\"#333\">square<\/text>\n<\/svg>\n\n<connections>\n<doc url=\"http://localhost:8000/examples/hdoc.html\" title=\"Example HDOC\">\np|x:200;y:260;r:8_i:244;l:50;h:c70e7b;e:bGU=\np|x:560;y:260;r:8_i:314;l:51;h:985c98;e:bGU=\n<\/doc>\n<\/connections>\n\n<\/cdoc>"}</script>
+                            </div>
+                        </div>
+
+                        <div id="CurrentDocumentSidebar" class="SideBar" style="display:none"></div>
+
+                    </div>
+
+                    <div id="CurrentDocumentBelowContentComments" class="BelowContentComments" style="display:none"></div>
+
+                    <div id="CurrentDocumentBottomBar" class="BottomBar"></div>
+
+                    <div id="CurrentDocumentPostNavBar" class="PostNavBar"></div>
+
+                    <div id="CurrentDocumentBottomPanel" class="DocumentBottomPanel" style="display:none">
+                        <div id="CurrentDocumentBottomPanelRow" class="DocumentBottomPanelRow"></div>
+                        <div id="CurrentDocumentBottomPanelBottomMessage" class="DocumentBottomPanelBottomMessage"></div>
+                    </div>
+                    <div id="CurrentDocumentMainCollageDiv">
+                        <canvas id="CurrentDocumentMainCollageCanvas" class="OneCollageCanvas"></canvas>
+                    </div>
+                    <div id="CurrentDocumentDropDownMenu" class="DocumentDropDownMenu"></div>
+                </div>
+
+                <div id="CurrentDocumentInfoContainer">
+                    <div id="CurrentDocumentInfo"></div>
+                </div>
+
+                <div id="CurrentDocumentExportContainer"></div>
+
+            </div>
+
+        </div>
+
+        <div id="middle-canvas-topDiv">
+            <svg id="svgArrow" width="28" height="12" viewBox="0 0 28 12" fill="none" xmlns="http://www.w3.org/2000/svg"></svg>
+            <a title="List of floating links" id="LinksOpenButton"></a>
+        </div>
+
+        <div id="middle-space-div"></div>
+
+        <div id="AllRightDocumentsContainer">
+            <div id="RightDocumentsTabsContainer"></div>
+            <div id="RightDocumentsTopBar">
+                <div title="Veiw source" id="RightDocumentSourceCodeButton" class="DocumentTopBarButtonWrapper"></div>
+                <div title="Center collage" id="RightDocumentCenterCollageButton" class="DocumentTopBarButtonWrapper"></div>
+
+                <div class="spacer10px"></div>
+
+                <div class="TitleContainer">
+                    <span id="RightDocumentOptionalTitleSpan" style="display: none;"></span>
+                    <a id="RightDocumentTitleLink"><span id="RightDocumentTitleSpan" class="DocumentTitleSpan"></span></a>
+                </div>
+
+                <div id="RightDocumentCopyButton" class="DocumentTopBarButtonWrapper" title="This document is a copy of another document."></div>
+
+            </div>
+            <div id="RightDocumentCollectionContainer"></div>
+            <div id="RightDocumentExportContainer"></div>
+        </div>
+
+        <canvas id="flinks-canvas"></canvas>
+    </div>
+
+    <div id="LinksListContainerDiv">
+        <div id="LinksListTopRow">
+            <div id="LinksListTopRowLeftSortButtonContainer"></div>
+            <div id="LinksListTopRowMiddleSpacer"></div>
+            <div id="LinksListTopRowRightSortButtonContainer"></div>
+            <div id="LinksListTopRowEndSpacer"></div>
+        </div>
+        <div id="FlinksScrollDiv" class="scroll-container"></div>
+        <span id="LinksListModificationMessage">Floating links were modified</span>
+        <div id="LinksListBottomRow">
+            <button id="LinksListCloseButton" class="CancelButton">Close</button>
+            <div class="LinksListBottomRowMiddleSpacer"></div>
+            <button id="LinksListOriginalLinksButton" class="CancelButton">Show original flinks</button>
+            <div id="LinksListOriginalLinksSpacer" class="LinksListBottomRowMiddleSpacer"></div>
+            <button id="LinksListFixButton" class="ActionButton">Fix all</button>
+        </div>
+    </div>
+
+    <div id="spinner" class="spinner"></div>
+    <div id="CurrentUrl"></div>
+    <div id="multiple-links-popup"></div>
+</div>
+
+</body>
+</html>

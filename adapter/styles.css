@@ -1,0 +1,6 @@
+/* CSS entry point, bundled into dist/rw-reader/rw-reader.css.
+   Themes are not included: each page links one of dist/rw-reader/themes/*.css. */
+@import "../reader/reader.css";
+@import "../reader/PageInfo.css";
+@import "../reader/ExportPage.css";
+@import "./reader.css";

@@ -1,0 +1,15 @@
+{
+  "name": "rw-reader-in-html",
+  "private": true,
+  "type": "module",
+  "description": "Reader's Web reader UI for standalone HTML pages (HDOC, CDOC, CONDOC) without the extension.",
+  "license": "MIT",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "npm run build && python3 -m http.server 8000"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.0"
+  }
+}
