@@ -71,7 +71,7 @@ export function hdocData(model) {
     data.header = header
 
     if (model.republishingPolicy) data['republishing-policy'] = model.republishingPolicy
-    if (model.panels && Object.keys(model.panels).length) data.panels = model.panels
+    if (model.panels && Object.keys(model.panels).length) data.panels = orderedPanels(model.panels)
 
     if (model.connections.length) {
         data.connections = model.connections.map(con => {
@@ -86,4 +86,19 @@ export function hdocData(model) {
         if (!(key in data)) data[key] = model.extra[key]
     }
     return data
+}
+
+// The panels in a fixed order (the order of the plugin's hdoc-data), so saved pages don't change when
+// panels are switched off and on in the editor. Unknown keys come last.
+const PANEL_ORDER = ['top', 'post-nav', 'sidebar', 'comments', 'bottom']
+
+function orderedPanels(panels) {
+    const ordered = {}
+    for (const key of PANEL_ORDER) {
+        if (key in panels) ordered[key] = panels[key]
+    }
+    for (const key of Object.keys(panels)) {
+        if (!(key in ordered)) ordered[key] = panels[key]
+    }
+    return ordered
 }

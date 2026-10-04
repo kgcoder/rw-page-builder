@@ -17,6 +17,8 @@
         <button type="button" id="open-file-button">Open file…</button>
         <button type="button" id="open-url-button">Open URL…</button>
         <span class="toolbar-separator"></span>
+        <button type="button" id="site-button" aria-pressed="false">Site settings</button>
+        <span class="toolbar-separator"></span>
         <button type="button" id="copy-button">Copy HTML</button>
         <button type="button" id="save-button" class="primary">Save .html</button>
     </div>
@@ -28,6 +30,7 @@
     <section class="editor">
         <ul id="messages" class="messages"></ul>
         <form id="doc-form" autocomplete="off"></form>
+        <div id="site-view" class="site-view" hidden></div>
     </section>
 
     <section class="preview">

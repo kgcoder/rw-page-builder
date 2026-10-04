@@ -30,9 +30,8 @@ export function isAbsoluteUrl(url) {
     }
 }
 
-// fieldErrors: problems the form tracks itself (e.g. panels JSON that doesn't parse), by label.
 // flinkResults: per connection, the anchorFlink() results from generator/flinks.js.
-export function validate(model, fieldErrors, flinkResults) {
+export function validate(model, flinkResults) {
     const errors = []
     const warnings = []
 
@@ -59,10 +58,6 @@ export function validate(model, fieldErrors, flinkResults) {
                 + ' the content. Restore the text, remove the flink, or link it again in the RW Reader extension.')
         }
     })
-
-    for (const key of Object.keys(fieldErrors || {})) {
-        if (fieldErrors[key]) errors.push(key + ': ' + fieldErrors[key])
-    }
 
     return { errors, warnings }
 }

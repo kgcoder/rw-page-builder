@@ -16,11 +16,15 @@ https://github.com/kgcoder/readers-web-specs
 // Opening existing pages and saving the generated one.
 import { generate } from '../generator/generate.js'
 import { parse } from '../generator/parse.js'
+import { modelMatchesSite } from './siteSettings.js'
 import { getFileName, getModel, markSaved, setModel } from './state.js'
 
 // Throws with a readable message if the page isn't a Reader's Web document.
 export function openHtml(html, fileName) {
-    setModel(parse(html, DOMParser), fileName)
+    const model = parse(html, DOMParser)
+    // A page made with the current site settings keeps following them; one that differs keeps its own.
+    model.useSite = modelMatchesSite(model)
+    setModel(model, fileName)
 }
 
 export function openFile(file) {

@@ -49,3 +49,10 @@ function appendChild(el, child) {
 export function clear(el) {
     while (el.firstChild) el.removeChild(el.firstChild)
 }
+
+// Replaces el's children. Like h(), it skips null/false and flattens arrays (replaceChildren() would
+// turn null into the text "null").
+export function setChildren(el) {
+    clear(el)
+    for (let i = 1; i < arguments.length; i++) appendChild(el, arguments[i])
+}

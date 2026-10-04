@@ -690,3 +690,127 @@ button.icon {
 .flink-broken {
     color: var(--danger);
 }
+
+/* ---- site settings and panels */
+
+[hidden] {
+    display: none !important;
+}
+
+.view-head h2 {
+    margin: 0 0 4px;
+    font-size: 17px;
+}
+
+.view-head {
+    margin-bottom: 14px;
+}
+
+.view-head .hint {
+    display: block;
+    margin: 0 0 8px;
+}
+
+.inline-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.notice {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px 12px;
+    margin-bottom: 12px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+.panels-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 4px 0 12px;
+}
+
+.panel-box {
+    padding: 8px 10px 2px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.panel-toggle {
+    margin-bottom: 8px;
+    font-weight: 600;
+}
+
+.panel-box > .hint {
+    margin: -4px 0 8px;
+}
+
+.panel-body > .field-label {
+    display: block;
+    margin-bottom: 4px;
+}
+
+.item-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.item-card {
+    padding: 6px 8px 0;
+    border-radius: 6px;
+    background: var(--bg);
+}
+
+.item-card-head {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-bottom: 4px;
+}
+
+.item-card-title {
+    margin-right: auto;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.link-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-bottom: 10px;
+}
+
+.link-list > button {
+    align-self: flex-start;
+}
+
+.link-row {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr) auto auto auto;
+    gap: 4px;
+    align-items: center;
+}
+
+.view-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.view-title h2 {
+    margin: 0;
+}

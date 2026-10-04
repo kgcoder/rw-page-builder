@@ -5,7 +5,7 @@ Build and publish [Reader's Web](https://github.com/kgcoder/readers-web-specs) d
 ## Publishing
 
 1. Build (or download) the `rw-reader/` folder and upload it to your site once, e.g. as `https://example.com/rw-reader/`.
-2. For each document, upload an HTML page like the ones in [examples/](examples/), pointing at that folder:
+2. For each document, upload an HTML page that points at that folder. The [page builder](#page-builder) makes these pages; you can also write them by hand, like the ones in [examples/](examples/):
 
 ```html
 <link rel="stylesheet" href="/rw-reader/rw-reader.css">
@@ -39,14 +39,22 @@ npm run preview    # build + serve the production files on :8000
 
 In dev mode the bundle is rebuilt in memory on each request, so edits in `adapter/` or `reader/` only need a page reload. The example pages use the same URLs in both modes.
 
-## Later: a document tool
+## Page builder
 
-Planned: a form-based page (`tool/`) that generates these HTML files. It is pure client-side, so it can be used on readersweb.org or uploaded next to your own pages.
+`rw-tool/` is a client-side page that makes these HTML files. Open `rw-tool/index.html` from a local build, or upload the folder next to `rw-reader/` on your site (the preview uses the `rw-reader/` folder next to it).
 
-- Fields: document type, title, author, date, language, republishing policy, content (HTML for HDOC, SVG for CDOC, main URL for CONDOC), connections, and site-wide settings (asset URL, theme, font set, panels, comments).
-- Site-wide settings are kept in localStorage and can be exported or imported as `rw-site.json`, which the tool loads automatically when it runs on the same site.
-- Existing pages can be opened back into the form; the generated HTML is the source of truth.
-- Live preview in an iframe using the real reader bundle.
-- One generator module shared by the tool and a possible CLI for batch generation; the example pages become its test fixtures.
-- Cross-origin connections: the users may implement a proxy endpoint either on their site or using some service (Supabase, Firebase, etc.). Any restrictions (allowed URLs) will be implemented by the user outside of this project. Without a proxy endpoint, the current popup stays: it lists the documents that can't be loaded and links to the RW Reader extension.
-- CDOC editor. There will also be another tool that will allow users to create an SVG for the CDOC. It shoule allow users to create a frame (a rectangle of any size) and add images by url and possibly draw lines, add hyperlinks. Then exported source code will be used in a new CDOC.
+- **Documents.** Choose HDOC, CDOC or CONDOC, fill in the title and the other fields, and save the `.html` file (or copy its HTML). Saving is disabled while there are errors, such as a missing title or a connection URL that isn't absolute.
+- **HDOC content** is edited as blocks (paragraphs, headings, lists, quotes, images, code, separators) or as HTML; both tabs edit the same content. Markup that can't be shown as blocks is kept as an HTML block, unchanged. Select text to format it or add a link (⌘K).
+- **Connections.** Flinks are made in the RW Reader extension and pasted into a connection, one per line. When you edit an HDOC's content, its flinks follow the text they point at; a flink whose text was changed or removed is kept and marked "Not found".
+- **Opening pages.** Open an existing page from a file, a URL, or by dropping it on the window, edit it and save it again. The page is the source of truth: nothing is stored anywhere else.
+- **Preview.** The page is shown with the real reader as you type.
+- **Site settings** (toolbar: *Site settings*): the reader assets URL, theme, font set, default language, and the top, sidebar and bottom panels. New documents use them, and so does every document that was made with them; a page with different settings keeps its own until you choose *Use site settings*. Previous/next links and comments are set per document.
+
+Site settings are saved in your browser. *Copy rw-site.json* copies them, ready to paste into a new `rw-site.json` file created in the `rw-tool/` folder on your site (e.g. with your host's file manager); *Export rw-site.json* downloads the same file. With `rw-site.json` there, the tool loads it automatically, so every browser starts with the same settings. If a browser already has different settings, they're kept, and the tool offers to use the file instead.
+
+## Later
+
+- **CLI.** The generator (`generator/`) is shared code with no UI, so a command-line tool for batch generation is mostly a small script.
+- **CDOC editor.** A separate tool for making the SVG of a CDOC: a frame (a rectangle of any size), images by URL, possibly lines and hyperlinks. Its output is pasted into a new CDOC.
+- **Cross-origin connections.** Site owners may run a proxy endpoint, on their site or on a service (Supabase, Firebase, etc.); restrictions such as allowed URLs are up to them, outside this project. Without a proxy endpoint, the current popup stays: it lists the documents that can't be loaded and links to the RW Reader extension.
+- **Preview isolation.** The preview runs in a frame on the tool's own origin, so a page opened in the tool could run scripts there. Fine for your own pages; to be revisited before the tool is offered publicly (e.g. on readersweb.org).

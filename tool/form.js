@@ -18,11 +18,10 @@ https://github.com/kgcoder/readers-web-specs
 import { createBlockEditor } from './blocks/editor.js'
 import { renderConnections } from './connections.js'
 import { h } from './dom.js'
+import { FONT_SETS, THEMES, field, select as selectControl, textInput as textControl } from './fields.js'
+import { renderPanelsEditor } from './panelsEditor.js'
+import { applySiteToModel, getSite } from './siteSettings.js'
 import { changed, getModel } from './state.js'
-
-/* global RW_THEMES, RW_FONT_SETS */
-const THEMES = RW_THEMES
-const FONT_SETS = RW_FONT_SETS
 
 const TYPES = [
     { id: 'hdoc', label: 'HDOC', hint: 'A text document' },
@@ -30,16 +29,18 @@ const TYPES = [
     { id: 'condoc', label: 'CONDOC', hint: "Connections for another page" },
 ]
 
-// Errors in fields whose text can't be stored in the model yet (invalid JSON), by field label.
-const fieldErrors = {}
+// "" writes no <republishing-policy> at all. A value from an opened page that isn't listed is kept
+// (select() adds it as an extra option).
+const REPUBLISHING_POLICIES = [
+    { id: '', label: 'allow implicitly (default)' },
+    { id: 'do-not-republish', label: 'do-not-republish' },
+    { id: 'allow', label: 'allow' },
+]
 
-export function getFieldErrors() {
-    return fieldErrors
-}
-
-export function renderForm(form) {
+// actions.openSiteSettings(): shows the site settings view.
+export function renderForm(form, actions) {
     const model = getModel()
-    for (const key of Object.keys(fieldErrors)) delete fieldErrors[key]
+    const isHdoc = model.type === 'hdoc'
 
     const sections = [
         documentSection(model),
@@ -48,38 +49,21 @@ export function renderForm(form) {
             h('legend', null, 'Connections'),
             h('p', { class: 'hint' }, 'Flinks are created in the RW Reader extension. Paste them here, one per line.'),
             renderConnections(model)),
-        siteSection(model),
-        model.type === 'hdoc' ? panelsSection(model) : null,
+        isHdoc ? postNavSection(model) : null,
+        appearanceSection(model, actions),
+        isHdoc ? commentsSection(model) : null,
     ]
 
     form.replaceChildren(...sections.filter(Boolean))
 }
 
-
-// ---- fields
-
-function field(label, control, hint) {
-    return h('label', { class: 'field' },
-        h('span', { class: 'field-label' }, label),
-        control,
-        hint ? h('span', { class: 'hint' }, hint) : null)
-}
-
-// An <input> or <textarea> bound to a model property through get/set.
+// Controls bound to the document: every edit calls changed().
 function textInput(get, set, props) {
-    const tag = props && props.rows ? 'textarea' : 'input'
-    return h(tag, Object.assign({
-        type: tag === 'input' ? 'text' : null,
-        value: get(),
-        onInput: e => { set(e.target.value); changed() },
-    }, props))
+    return textControl(get, set, () => changed(), props)
 }
 
-function select(options, get, set, onAfter) {
-    return h('select', {
-        value: get(),
-        onChange: e => { set(e.target.value); changed(); if (onAfter) onAfter() },
-    }, options.map(o => h('option', { value: o.id }, o.label)))
+function select(options, get, set) {
+    return selectControl(options, get, set, () => changed())
 }
 
 
@@ -119,7 +103,7 @@ function documentSection(model) {
                 h('div', { class: 'inline' }, dateInput, todayButton))) : null,
         h('div', { class: 'row' },
             field('Language', textInput(() => model.lang, v => { model.lang = v.trim() }, { placeholder: 'en', class: 'short' })),
-            isHdoc ? field('Republishing policy', textInput(() => model.republishingPolicy, v => { model.republishingPolicy = v })) : null))
+            isHdoc ? field('Republishing policy', select(REPUBLISHING_POLICIES, () => model.republishingPolicy, v => { model.republishingPolicy = v })) : null))
 }
 
 function contentSection(model) {
@@ -182,46 +166,98 @@ function hdocContentSection(model) {
         tabBar, blocksPane, htmlPane)
 }
 
-function siteSection(model) {
-    const site = model.site
+function postNavSection(model) {
+    const link = (key, label) => {
+        const get = sub => {
+            const postNav = model.panels['post-nav']
+            return postNav && postNav[key] ? postNav[key][sub] || '' : ''
+        }
+        const set = (sub, value) => {
+            const postNav = model.panels['post-nav'] || {}
+            const target = postNav[key] || {}
+            if (value) target[sub] = value
+            else delete target[sub]
+            if (Object.keys(target).length) postNav[key] = target
+            else delete postNav[key]
+            if (Object.keys(postNav).length) model.panels['post-nav'] = postNav
+            else delete model.panels['post-nav']
+        }
+        return h('div', { class: 'row' },
+            field(label + ' title', textInput(() => get('title'), v => set('title', v))),
+            field(label + ' URL', textInput(() => get('href'), v => set('href', v.trim()), { type: 'url' })))
+    }
     return h('fieldset', { class: 'section' },
-        h('legend', null, 'Site'),
+        h('legend', null, 'Previous / next'),
+        h('p', { class: 'hint' }, 'Links to the previous and next documents, shown below this one.'),
+        link('prev', 'Previous'),
+        link('next', 'Next'))
+}
+
+// Theme, assets and panels: either the site settings or this page's own.
+function appearanceSection(model, actions) {
+    const site = model.site
+    const legend = h('legend', null, 'Appearance and panels')
+
+    if (model.useSite) {
+        const siteSettings = getSite()
+        const panels = ['top', 'sidebar', 'bottom'].filter(key => siteSettings.panels[key])
+        const summary = 'Theme ' + site.theme + ', font set ' + site.fontSet + ', reader at ' + site.assetsUrl
+            + (model.type === 'hdoc' ? '; panels: ' + (panels.length ? panels.join(', ') : 'none') : '') + '.'
+        return h('fieldset', { class: 'section' }, legend,
+            h('p', null, 'Uses the site settings. ', h('span', { class: 'hint' }, summary)),
+            h('div', { class: 'inline-buttons' },
+                h('button', { type: 'button', class: 'small', onClick: actions.openSiteSettings }, 'Edit site settings'),
+                h('button', {
+                    type: 'button', class: 'small', title: 'Give this page its own theme, assets URL and panels',
+                    onClick: () => { model.useSite = false; changed(true) },
+                }, 'Customize for this page')))
+    }
+
+    return h('fieldset', { class: 'section' }, legend,
+        h('div', { class: 'notice' },
+            h('span', null, 'This page has its own settings, different from the site settings.'),
+            h('button', {
+                type: 'button', class: 'small',
+                onClick: () => {
+                    applySiteToModel(model)
+                    model.useSite = true
+                    changed(true)
+                },
+            }, 'Use site settings')),
         field('Reader assets URL', textInput(() => site.assetsUrl, v => { site.assetsUrl = v.trim() }, { placeholder: '/rw-reader/' }),
             'Where the rw-reader/ folder is on your site.'),
         h('div', { class: 'row' },
-            field('Theme', select(withCurrent(THEMES.map(t => ({ id: t, label: t })), site.theme), () => site.theme, v => { site.theme = v })),
-            field('Font set', select(withCurrent(FONT_SETS, site.fontSet), () => site.fontSet, v => { site.fontSet = v }))),
-        field('Comments label', textInput(() => site.commentsLabel, v => { site.commentsLabel = v }, { placeholder: 'Open in a new tab to view comments' })))
+            field('Theme', select(THEMES, () => site.theme, v => { site.theme = v })),
+            field('Font set', select(FONT_SETS, () => site.fontSet, v => { site.fontSet = v }))),
+        field('Comments label', textInput(() => site.commentsLabel, v => { site.commentsLabel = v }, { placeholder: 'Open in a new tab to view comments' })),
+        model.type === 'hdoc' ? h('div', null,
+            h('span', { class: 'field-label' }, 'Panels'),
+            renderPanelsEditor(model.panels, () => changed())) : null)
 }
 
-// Keeps a value from an opened page in the select even if this reader version doesn't know it.
-function withCurrent(options, current) {
-    if (!current || options.some(o => o.id === current)) return options
-    return options.concat([{ id: current, label: current + ' (unknown)' }])
-}
+const COMMENT_FIELDS = [
+    ['url', 'Comments URL', 'The comments of this document (a WordPress REST API comments URL).'],
+    ['title', 'Title', ''],
+    ['empty', 'Message when there are no comments', ''],
+    ['leave-comment-url', 'Leave a comment URL', 'Where readers write a comment.'],
+    ['leave-comment-label', '"Leave a comment" label', ''],
+    ['reply-label', '"Reply" label', ''],
+    ['load-more-label', '"Load more" label', ''],
+]
 
-function panelsSection(model) {
-    const label = 'Panels JSON'
-    const error = h('span', { class: 'field-error' })
-    const textarea = h('textarea', {
-        rows: 14, class: 'code', spellcheck: 'false',
-        value: Object.keys(model.panels).length ? JSON.stringify(model.panels, null, 2) : '',
-        onInput: e => {
-            const text = e.target.value.trim()
-            try {
-                const value = text ? JSON.parse(text) : {}
-                if (!value || typeof value !== 'object' || Array.isArray(value)) throw new Error('Must be a JSON object')
-                model.panels = value
-                fieldErrors[label] = ''
-            } catch (err) {
-                fieldErrors[label] = err.message
-            }
-            error.textContent = fieldErrors[label]
-            changed()
-        },
-    })
-    return h('details', { class: 'section details' },
-        h('summary', null, 'Panels'),
-        h('p', { class: 'hint' }, 'The "panels" object of hdoc-data: top, post-nav, sidebar, comments, bottom.'),
-        h('label', { class: 'field' }, textarea, error))
+function commentsSection(model) {
+    const get = key => model.panels.comments ? model.panels.comments[key] || '' : ''
+    const set = (key, value) => {
+        const comments = model.panels.comments || {}
+        if (value) comments[key] = value
+        else delete comments[key]
+        if (Object.keys(comments).length) model.panels.comments = comments
+        else delete model.panels.comments
+    }
+    return h('details', { class: 'section details', open: !!model.panels.comments },
+        h('summary', null, 'Comments'),
+        h('p', { class: 'hint' }, 'Shown below the document when it has a comments URL.'),
+        COMMENT_FIELDS.map(([key, label, hint]) => field(label,
+            textInput(() => get(key), v => set(key, key.indexOf('url') !== -1 ? v.trim() : v), key.indexOf('url') !== -1 ? { type: 'url' } : null),
+            hint || null)))
 }

@@ -18,11 +18,13 @@ import { reanchorFlinks } from '../generator/flinks.js'
 import { createModel } from '../generator/model.js'
 import { showFlinkStatuses } from './connections.js'
 import { copyHtml, openFile, openUrl, saveFile } from './files.js'
-import { getFieldErrors, renderForm } from './form.js'
+import { renderForm } from './form.js'
 import { initPreview, schedulePreview, showPreview } from './preview.js'
-import { getFileName, getModel, isDirty, markDirty, onChange, setModel } from './state.js'
+import { renderSiteForm } from './siteForm.js'
+import { applySiteToModel, getServerSite, getSite, initSite, onSiteChange } from './siteSettings.js'
+import { changed, getFileName, getModel, isDirty, markDirty, onChange, setModel } from './state.js'
 import { validate } from './validate.js'
-import { h } from './dom.js'
+import { h, setChildren } from './dom.js'
 
 const $ = id => document.getElementById(id)
 
@@ -32,16 +34,46 @@ document.addEventListener('DOMContentLoaded', () => {
     let problems = { errors: [], warnings: [] }
     let notice = '' // shown with the problems until another document is opened
 
-    initPreview($('preview-holder'))
     // For computing the document's text: a document that doesn't load images or run anything.
     const inertDoc = document.implementation.createHTMLDocument('')
+    const siteView = $('site-view')
+    const siteButton = $('site-button')
+    let renderedSite = null
+    let renderedServerSite = null
+
+    let formIsStale = false // the site settings changed while the document form was hidden
+
+    function showSiteView(show) {
+        if (!show && formIsStale) {
+            formIsStale = false
+            renderForm(form, actions)
+            showFlinkStatuses(reanchorFlinks(getModel(), inertDoc))
+        }
+        siteView.hidden = !show
+        form.hidden = show
+        $('messages').hidden = show // they're about the document
+        siteButton.textContent = show ? 'Back to document' : 'Site settings'
+        siteButton.setAttribute('aria-pressed', String(show))
+        if (show) renderSite()
+    }
+
+    function renderSite() {
+        renderedSite = getSite()
+        renderedServerSite = getServerSite()
+        renderSiteForm(siteView, status, actions.closeSiteSettings)
+    }
+
+    const actions = { openSiteSettings: () => showSiteView(true), closeSiteSettings: () => showSiteView(false) }
+    showDocumentView = () => showSiteView(false)
+
+    initPreview($('preview-holder'))
 
     function update(kind) {
         // Before the form is built, so it shows the updated flinks.
         const flinkResults = reanchorFlinks(getModel(), inertDoc)
         const moved = countStatus(flinkResults, 'moved')
         if (kind === 'replace') {
-            renderForm(form)
+            renderForm(form, actions)
             notice = ''
             if (moved) {
                 // The page was saved before its content changed; its flinks are fixed now.
@@ -50,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         showFlinkStatuses(flinkResults)
-        problems = validate(getModel(), getFieldErrors(), flinkResults)
+        problems = validate(getModel(), flinkResults)
         renderMessages(problems, notice)
         $('save-button').disabled = $('copy-button').disabled = problems.errors.length > 0
         const name = getFileName()
@@ -64,10 +96,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     $('new-button').addEventListener('click', () => {
         if (!confirmDiscard()) return
-        const model = createModel('hdoc')
-        model.site = Object.assign({}, getModel().site)
-        setModel(model)
+        setModel(newDocument())
+        showSiteView(false)
         status('New document')
+    })
+
+    siteButton.addEventListener('click', () => showSiteView(siteView.hidden))
+
+    // Site settings changed (edited, imported, or loaded from rw-site.json).
+    onSiteChange(() => {
+        const model = getModel()
+        if (model.useSite) {
+            applySiteToModel(model)
+            // An ordinary edit (debounced preview); the hidden form is rebuilt when it's shown again.
+            if (form.hidden) formIsStale = true
+            changed(!form.hidden)
+        }
+        // Rebuilt only when the settings were replaced, not while they're being typed into.
+        if (!siteView.hidden && (getSite() !== renderedSite || getServerSite() !== renderedServerSite)) renderSite()
     })
 
     const fileInput = $('file-input')
@@ -79,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fileInput.value = ''
         if (file) report(openFile(file), file.name)
     })
+
 
     $('open-url-button').addEventListener('click', () => {
         if (!confirmDiscard()) return
@@ -104,11 +151,29 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     })
 
-    update('replace')
+    // initSite() reads this browser's settings right away (so the first document uses them), then
+    // looks for rw-site.json in the background.
+    initSite()
+    setModel(newDocument())
 })
 
+// A new HDOC that uses the site settings.
+function newDocument() {
+    const model = createModel('hdoc')
+    model.lang = getSite().lang
+    applySiteToModel(model)
+    model.useSite = true
+    return model
+}
+
+// Set up on DOMContentLoaded: shows the document view after a page was opened.
+let showDocumentView = () => {}
+
 function report(promise, name) {
-    promise.then(() => status('Opened ' + name), err => status("Couldn't open " + name + ': ' + err.message, true))
+    promise.then(() => {
+        showDocumentView()
+        status('Opened ' + name)
+    }, err => status("Couldn't open " + name + ': ' + err.message, true))
 }
 
 function countStatus(flinkResults, status) {
@@ -125,9 +190,9 @@ function confirmDiscard() {
 
 function renderMessages(problems, notice) {
     const list = $('messages')
-    list.replaceChildren(
-        ...problems.errors.map(text => h('li', { class: 'error' }, text)),
-        ...problems.warnings.map(text => h('li', { class: 'warning' }, text)),
+    setChildren(list,
+        problems.errors.map(text => h('li', { class: 'error' }, text)),
+        problems.warnings.map(text => h('li', { class: 'warning' }, text)),
         notice ? h('li', { class: 'info' }, notice) : null)
 }
 
