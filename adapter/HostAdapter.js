@@ -51,6 +51,92 @@ function readConfig() {
 }
 
 
+const EXTENSION_URL = 'https://chromewebstore.google.com/detail/rw-reader/hlckcdbgknflkkciojgdbhomdnegimbm'
+
+// Explains why a connected document on another site can't be opened, and how the extension gets
+// around it. Uses the reader's popup styles (.swp-comment-popup*, reader/reader.css). If several
+// documents fail at once (e.g. "Download all connected documents"), they're listed in one popup.
+function showCrossOriginPopup(url) {
+    const existing = document.querySelector('.rw-cross-origin-popup')
+    if (existing) {
+        const urls = existing.querySelector('.rw-cross-origin-urls')
+        const listed = Array.prototype.some.call(urls.children, item => item.textContent === url)
+        if (!listed) urls.appendChild(urlItem(url))
+        updateCrossOriginMessage(existing)
+        return
+    }
+
+    const overlay = document.createElement('div')
+    overlay.className = 'swp-comment-popup-overlay'
+
+    const popup = document.createElement('div')
+    popup.className = 'swp-comment-popup rw-cross-origin-popup'
+    popup.setAttribute('role', 'dialog')
+    popup.setAttribute('aria-modal', 'true')
+
+    const close = () => {
+        overlay.remove()
+        document.removeEventListener('keydown', onKeyDown)
+    }
+    const onKeyDown = e => { if (e.key === 'Escape') close() }
+
+    const closeBtn = document.createElement('button')
+    closeBtn.className = 'swp-comment-popup-close'
+    closeBtn.textContent = '✕'
+    closeBtn.title = 'Close'
+    closeBtn.setAttribute('aria-label', 'Close')
+    closeBtn.addEventListener('click', close)
+
+    const message = document.createElement('p')
+    message.className = 'rw-cross-origin-message'
+
+    const list = document.createElement('ul')
+    list.className = 'rw-cross-origin-urls'
+    list.appendChild(urlItem(url))
+
+    const workaround = document.createElement('p')
+    workaround.textContent = 'You can get around this restriction by installing the RW Reader extension and reloading this page.'
+
+    const link = document.createElement('a')
+    link.className = 'rw-cross-origin-extension-link'
+    link.href = EXTENSION_URL
+    link.target = '_blank'
+    link.rel = 'noopener'
+    link.textContent = 'Get RW Reader for Chrome'
+
+    popup.append(closeBtn, message, list, workaround, link)
+    updateCrossOriginMessage(popup)
+    overlay.appendChild(popup)
+    overlay.addEventListener('click', e => { if (e.target === overlay) close() })
+    document.addEventListener('keydown', onKeyDown)
+    document.body.appendChild(overlay)
+    closeBtn.focus()
+}
+
+// One document, several documents on one other site, or documents on several sites.
+function updateCrossOriginMessage(popup) {
+    const urls = Array.prototype.map.call(popup.querySelectorAll('.rw-cross-origin-urls li'), item => item.textContent)
+    const hosts = new Set(urls.map(url => {
+        try {
+            return new URL(url).host
+        } catch (e) {
+            return url
+        }
+    }))
+    let text
+    if (urls.length === 1) text = "This document can't be loaded here because it's hosted on another site:"
+    else if (hosts.size === 1) text = "These documents can't be loaded here because they're hosted on another site:"
+    else text = "These documents can't be loaded here because they're hosted on other sites:"
+    popup.querySelector('.rw-cross-origin-message').textContent = text
+}
+
+function urlItem(url) {
+    const item = document.createElement('li')
+    item.textContent = url
+    return item
+}
+
+
 export default class HostAdapter {
 
 
@@ -159,7 +245,7 @@ export default class HostAdapter {
     // Only called for cross-origin URLs (NetworkManager fetches same-host URLs itself).
     // A static site has no proxy, so these requests aren't supported yet.
     async fetchWebPage(url, options) {
-        alert("This document can't be loaded here because it's hosted on another site:\n\n" + url)
+        showCrossOriginPopup(url)
         return {text: '', error: new Error('Cross-origin requests are not supported: ' + url)}
     }
 

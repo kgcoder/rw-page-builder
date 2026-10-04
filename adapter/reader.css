@@ -50,3 +50,49 @@ html {
 .swp-reply-btn:hover {
     background: transparent;
 }
+
+/* Popup for connected documents on another site (HostAdapter.fetchWebPage). Same frame as the
+   reader's promotion popup, sized to its text. */
+.swp-comment-popup.rw-cross-origin-popup {
+    height: auto;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 28px 28px 24px;
+    color: #191919;
+    font-family: var(--font-main-family, Arial, sans-serif);
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+.rw-cross-origin-popup p {
+    margin: 0 0 12px;
+}
+
+.rw-cross-origin-urls {
+    margin: 0 0 16px;
+    padding: 0;
+    list-style: none;
+}
+
+.rw-cross-origin-urls li {
+    padding: 6px 10px;
+    margin-bottom: 4px;
+    border-radius: 4px;
+    background: #f2f2f2;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.rw-cross-origin-extension-link {
+    align-self: flex-start;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background: #2f6fdb;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.rw-cross-origin-extension-link:hover {
+    background: #2459b3;
+}

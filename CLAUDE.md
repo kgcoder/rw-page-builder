@@ -35,7 +35,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 - Do not use optional chaining or nullish coalescing (the bundle targets es2019).
 - New JS files start with the license header used in [generator/model.js](generator/model.js) ("RW Page Builder", Copyright (c) 2026 Karen Grigorian, MIT, Reader's Web CC BY-ND 4.0 note). Files in `reader/` keep their own "RW Reader UI" header.
 - The bundle is **IIFE**, loaded with a classic `<script defer>`, not `type="module"`. The adapter reads `document.currentScript` at module evaluation time; that only works in a classic script.
-- `fetchWebPage` (cross-origin requests only) currently just shows an alert: a static host has no proxy. Same-host connections are fetched directly by `reader/NetworkManager.js`.
+- `fetchWebPage` (cross-origin requests only) shows a popup (`showCrossOriginPopup` in the adapter) linking to the extension in the Chrome Web Store: a static host has no proxy. Same-host connections are fetched directly by `reader/NetworkManager.js`.
 - Connection URLs and CONDOC `<main>` URLs must be **absolute**. The reader does `new URL(url)` without a base. The examples use `http://localhost:8000/examples/...`, so open them on `localhost:8000`, not `127.0.0.1` or another port, or they count as cross-origin.
 - Do not test in the browser yourself. Verify with `node --check`, `npm run build` and curl against the dev server, then let the user test in the browser.
 
