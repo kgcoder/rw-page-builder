@@ -46,4 +46,5 @@ Planned: a form-based page (`tool/`) that generates these HTML files. It is pure
 - Existing pages can be opened back into the form; the generated HTML is the source of truth.
 - Live preview in an iframe using the real reader bundle.
 - One generator module shared by the tool and a possible CLI for batch generation; the example pages become its test fixtures.
-- Cross-origin connections: direct `fetch` for CORS-enabled sites, plus an optional proxy (e.g. a small `proxy.php` restricted to the page's own connections).
+- Cross-origin connections: the users may implement a proxy endpoint either on their site or using some service (Supabase, Firebase, etc.). Any restrictions (allowed URLs) will be implemented by the user outside of this project. If they don't implement a proxy endpoint a popup with an iframe will be shown prompting readers to install the Chrome extension. It will be done similar to promo popup but using another page on my site.
+- CDOC editor. There will also be another tool that will allow users to create an SVG for the CDOC. It shoule allow users to create a frame (a rectangle of any size) and add images by url and possibly draw lines, add hyperlinks. Then exported source code will be used in a new CDOC.
