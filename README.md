@@ -1,6 +1,6 @@
-# RW Reader in HTML
+# RW Page Builder
 
-Publish [Reader's Web](https://github.com/kgcoder/readers-web-specs) documents (HDOC, CDOC, CONDOC) as plain static HTML pages. Visitors see the full Reader's Web reader UI without installing anything, and visitors with the RW Reader extension get the extension's own reader.
+Build and publish [Reader's Web](https://github.com/kgcoder/readers-web-specs) documents (HDOC, CDOC, CONDOC) as plain static HTML pages. Visitors see the full Reader's Web reader UI without installing anything, and visitors with the RW Reader extension get the extension's own reader.
 
 ## Publishing
 

@@ -1,8 +1,8 @@
-# RW Reader in HTML — CLAUDE.md
+# RW Page Builder — CLAUDE.md
 
 ## Project Overview
 
-Lets anyone publish **Reader's Web** documents (HDOC, CDOC, CONDOC) as plain static `.html` files that show the full Reader UI even when the visitor doesn't have the RW Reader extension. It is the static equivalent of the WordPress plugin's `doc_in_reader` display mode (plugin: Reader's Web Publisher, `static-web-publisher`).
+**RW Page Builder** (formerly "RW Reader in HTML", repo `kgcoder/rw-page-builder`) lets anyone publish **Reader's Web** documents (HDOC, CDOC, CONDOC) as plain static `.html` files that show the full Reader UI even when the visitor doesn't have the RW Reader extension. It is the static equivalent of the WordPress plugin's `doc_in_reader` display mode (plugin: Reader's Web Publisher, `static-web-publisher`).
 
 A site owner uploads the `dist/rw-reader/` folder once (bundled JS, CSS, themes, images), then uploads one HTML file per document. A form-based tool that generates those files is planned (see "Later" in README.md).
 
@@ -27,6 +27,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 - If the reader starts relying on a new DOM element, the example pages (and later the generator template) must provide it.
 - DOM ids that the plugin suffixes with `-rwp` use `-rw` here (`CurrentDocumentInfoButton-rw`, `CurrentDocumentTitleSpan-rw`). They must differ from the extension's ids so the extension's takeover is detectable.
 - Do not use optional chaining or nullish coalescing (the bundle targets es2019).
+- New JS files start with the license header used in [generator/model.js](generator/model.js) ("RW Page Builder", Copyright (c) 2026 Karen Grigorian, MIT, Reader's Web CC BY-ND 4.0 note). Files in `reader/` keep their own "RW Reader UI" header.
 - The bundle is **IIFE**, loaded with a classic `<script defer>`, not `type="module"`. The adapter reads `document.currentScript` at module evaluation time; that only works in a classic script.
 - `fetchWebPage` (cross-origin requests only) currently just shows an alert: a static host has no proxy. Same-host connections are fetched directly by `reader/NetworkManager.js`.
 - Connection URLs and CONDOC `<main>` URLs must be **absolute**. The reader does `new URL(url)` without a base. The examples use `http://localhost:8000/examples/...`, so open them on `localhost:8000`, not `127.0.0.1` or another port, or they count as cross-origin.

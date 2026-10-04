@@ -1,0 +1,89 @@
+/*
+RW Page Builder
+
+Copyright (c) 2026 Karen Grigorian
+Code licensed under the MIT License.
+
+This software implements document types defined by the Reader's Web project.
+
+Reader's Web document types are licensed under CC BY-ND 4.0 and are maintained externally.
+
+For the official list of document types and specifications, see:
+https://github.com/kgcoder/readers-web-specs
+*/
+
+// generate(model) -> the full HTML page for one document.
+import { escapeHtml, escapeJsonForScript } from './escape.js'
+import { bottomPanel, postNavHtml, sidebarHtml, topPanel } from './panels.js'
+import { buildCdocSource, buildCondocSource } from './sources.js'
+import { pageHtml } from './template.js'
+
+const NO_PANELS = {}
+
+export function generate(model) {
+    const site = model.site
+    const isHdoc = model.type === 'hdoc'
+    const panels = isHdoc ? (model.panels || NO_PANELS) : NO_PANELS
+
+    let assetsUrl = site.assetsUrl || ''
+    if (assetsUrl && !assetsUrl.endsWith('/')) assetsUrl += '/'
+
+    let mainDivClass = ''
+    let mainContent
+    let dataScript = ''
+    if (isHdoc) {
+        mainDivClass = ' hdoc-content'
+        mainContent = model.contentHtml.trim()
+        dataScript = `<script type="application/json" id="hdoc-data">\n${escapeJsonForScript(JSON.stringify(hdocData(model), null, 2))}\n</script>\n\n`
+    } else {
+        const id = model.type === 'cdoc' ? 'cdoc-source' : 'condoc-source'
+        const source = model.type === 'cdoc' ? buildCdocSource(model) : buildCondocSource(model)
+        mainContent = `<script type="application/json" style="display:none;" id="${id}">{"source": ${escapeJsonForScript(JSON.stringify(source))}}</script>`
+    }
+
+    return pageHtml({
+        lang: escapeHtml(model.lang || 'en'),
+        pageTitle: escapeHtml(model.pageTitle || model.header.h1),
+        assetsUrl: escapeHtml(assetsUrl),
+        theme: escapeHtml(site.theme || 'light'),
+        fontSet: escapeHtml(site.fontSet || 'default'),
+        scriptExtraAttrs: site.commentsLabel ? ` data-comments-label="${escapeHtml(site.commentsLabel)}"` : '',
+        h1: escapeHtml(model.header.h1),
+        mainDivClass,
+        mainContent,
+        top: topPanel(panels),
+        sidebar: sidebarHtml(panels),
+        postNav: postNavHtml(panels),
+        bottom: bottomPanel(panels),
+        dataScript,
+    })
+}
+
+// The hdoc-data JSON. Keys the tool doesn't know (model.extra) are written after the known ones.
+export function hdocData(model) {
+    const data = {}
+    if (model.lang) data.lang = model.lang
+    data.forced = true
+
+    const header = { h1: model.header.h1 }
+    if (model.header.author) header.author = model.header.author
+    if (model.header.date) header.date = model.header.date
+    data.header = header
+
+    if (model.republishingPolicy) data['republishing-policy'] = model.republishingPolicy
+    if (model.panels && Object.keys(model.panels).length) data.panels = model.panels
+
+    if (model.connections.length) {
+        data.connections = model.connections.map(con => {
+            const c = { url: con.url }
+            if (con.title) c.title = con.title
+            c.flinks = con.flinks
+            return c
+        })
+    }
+
+    for (const key of Object.keys(model.extra || {})) {
+        if (!(key in data)) data[key] = model.extra[key]
+    }
+    return data
+}
