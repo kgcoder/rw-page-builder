@@ -19,6 +19,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 | [examples/](examples/) | Hand-written HDOC, CDOC and CONDOC pages, connected to each other. The DOM is copied from the plugin's `templates/reader-template.php`. |
 | [generator/](generator/) | Pure modules shared by the tool and a later CLI: `generate(model)` → page HTML, `parse(html, DOMParser)` → model. The page skeleton is [generator/template.js](generator/template.js); keep it in sync with `examples/`. |
 | [tool/](tool/) | The page builder (form, connections, preview, open/save). Built into `dist/rw-tool/`. It must not import `reader/` modules: `reader/Globals.js` constructs the whole reader on import. Theme and font set lists come from `RW_THEMES` / `RW_FONT_SETS`, defined at build time in `scripts/common.mjs`. |
+| [tool/blocks/](tool/blocks/) | The HDOC block editor. `convert.js` (pure, tested) maps HTML ↔ blocks; untouched blocks are written back from their original `source`, so editing one block never reformats the rest (flink offsets depend on the text). Anything it can't map stays an HTML block. Content from opened pages goes through `safeHtml`/`parseInert` before it touches the tool's DOM. |
 | [test/](test/) | `npm test` (node:test + linkedom). The example pages are the generator's round-trip fixtures. |
 | [scripts/](scripts/) | `common.mjs` (shared esbuild options + asset copy), `build.mjs`, `dev.mjs`. |
 | `dist/rw-reader/` | Build output (gitignored). This folder is what users upload. |

@@ -15,6 +15,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // The form. It's rebuilt from the model when a document is opened or its type changes;
 // typing only updates the model.
+import { createBlockEditor } from './blocks/editor.js'
 import { renderConnections } from './connections.js'
 import { h } from './dom.js'
 import { changed, getModel } from './state.js'
@@ -122,12 +123,7 @@ function documentSection(model) {
 }
 
 function contentSection(model) {
-    if (model.type === 'hdoc') {
-        return h('fieldset', { class: 'section' },
-            h('legend', null, 'Content'),
-            field('HTML', textInput(() => model.contentHtml, v => { model.contentHtml = v }, { rows: 18, class: 'code', spellcheck: 'false' }),
-                'The body of the document, without the title. Scripts, styles and form elements are removed by the reader.'))
-    }
+    if (model.type === 'hdoc') return hdocContentSection(model)
     if (model.type === 'cdoc') {
         return h('fieldset', { class: 'section' },
             h('legend', null, 'Collage'),
@@ -139,6 +135,51 @@ function contentSection(model) {
         field('URL', textInput(() => model.mainUrl, v => { model.mainUrl = v.trim() }, { type: 'url', placeholder: 'https://example.com/article.html' }),
             'The page shown on the left. Pages on other sites need a proxy (not supported yet).'),
         field('Description', textInput(() => model.description, v => { model.description = v }, { rows: 3 })))
+}
+
+const CONTENT_TAB_KEY = 'rw-page-builder.content-tab'
+
+// Two views of model.contentHtml. The block editor rewrites the HTML only when a block is edited,
+// so switching tabs without editing never changes it.
+function hdocContentSection(model) {
+    const editor = createBlockEditor(value => { model.contentHtml = value; changed() })
+    const htmlInput = textInput(() => model.contentHtml, v => { model.contentHtml = v }, { rows: 22, class: 'code', spellcheck: 'false' })
+    const blocksPane = h('div', { class: 'tab-pane' }, editor.element,
+        h('p', { class: 'hint' }, 'Select text to format it or add a link (⌘K). Enter starts a new paragraph, Shift+Enter adds a line break.'))
+    const htmlPane = h('div', { class: 'tab-pane' }, htmlInput,
+        h('p', { class: 'hint' }, 'The body of the document, without the title. Scripts, styles and form elements are removed by the reader.'))
+
+    const tabs = {}
+    const tabBar = h('div', { class: 'tabs', role: 'tablist' }, [['blocks', 'Blocks'], ['html', 'HTML']].map(([id, label]) => {
+        tabs[id] = h('button', { type: 'button', role: 'tab', class: 'tab', onClick: () => show(id) }, label)
+        return tabs[id]
+    }))
+
+    function show(id) {
+        if (id === 'blocks' && editor.getHtml() !== model.contentHtml) editor.load(model.contentHtml)
+        if (id === 'html') htmlInput.value = model.contentHtml
+        blocksPane.hidden = id !== 'blocks'
+        htmlPane.hidden = id !== 'html'
+        for (const key of Object.keys(tabs)) tabs[key].setAttribute('aria-selected', String(key === id))
+        try {
+            localStorage.setItem(CONTENT_TAB_KEY, id)
+        } catch (e) {
+            // Only a convenience.
+        }
+    }
+
+    let initial = 'blocks'
+    try {
+        if (localStorage.getItem(CONTENT_TAB_KEY) === 'html') initial = 'html'
+    } catch (e) {
+        // Storage may be unavailable.
+    }
+    editor.load(model.contentHtml)
+    show(initial)
+
+    return h('fieldset', { class: 'section' },
+        h('legend', null, 'Content'),
+        tabBar, blocksPane, htmlPane)
 }
 
 function siteSection(model) {
