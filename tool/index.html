@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RW Page Builder</title>
+    <link rel="stylesheet" href="rw-tool.css">
+    <script defer src="rw-tool.js"></script>
+</head>
+
+<body>
+
+<header class="toolbar">
+    <h1 class="toolbar-title">RW Page Builder</h1>
+    <div class="toolbar-actions">
+        <button type="button" id="new-button">New</button>
+        <button type="button" id="open-file-button">Open file…</button>
+        <button type="button" id="open-url-button">Open URL…</button>
+        <span class="toolbar-separator"></span>
+        <button type="button" id="copy-button">Copy HTML</button>
+        <button type="button" id="save-button" class="primary">Save .html</button>
+    </div>
+    <span id="status" class="status" role="status"></span>
+    <input type="file" id="file-input" accept=".html,.htm,text/html" hidden>
+</header>
+
+<main class="layout">
+    <section class="editor">
+        <ul id="messages" class="messages"></ul>
+        <form id="doc-form" autocomplete="off"></form>
+    </section>
+
+    <section class="preview">
+        <div class="preview-bar">
+            <span class="preview-title">Preview</span>
+            <label class="checkbox"><input type="checkbox" id="auto-refresh" checked> Auto-refresh</label>
+            <button type="button" id="refresh-button">Refresh</button>
+        </div>
+        <div id="preview-holder" class="preview-holder"></div>
+    </section>
+</main>
+
+<div id="drop-overlay" class="drop-overlay">Drop an HTML page to open it</div>
+
+</body>
+</html>

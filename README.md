@@ -31,7 +31,9 @@ Connection URLs must be absolute. Connections to pages on other sites can't be o
 git submodule update --init
 npm install
 npm run dev        # http://localhost:8000/examples/hdoc.html (also cdoc.html, condoc.html)
-npm run build      # minified dist/rw-reader/
+                   # page builder: http://localhost:8000/dist/rw-tool/index.html
+npm run build      # minified dist/rw-reader/ and dist/rw-tool/
+npm test           # generator tests
 npm run preview    # build + serve the production files on :8000
 ```
 

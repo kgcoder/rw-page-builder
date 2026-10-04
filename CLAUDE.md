@@ -17,8 +17,12 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 | [adapter/HostAdapter.js](adapter/HostAdapter.js) | This host's `g.hostAdapter`. Reads its config from the `<script>` tag (`data-font-set`, `data-comments-label`; `assetsUrl` = `images/` next to the script). `window.vcReaderData` overrides it. |
 | [adapter/styles.css](adapter/styles.css) | CSS bundle entry (reader CSS + [adapter/reader.css](adapter/reader.css) host overrides). Themes are linked separately per page. |
 | [examples/](examples/) | Hand-written HDOC, CDOC and CONDOC pages, connected to each other. The DOM is copied from the plugin's `templates/reader-template.php`. |
+| [generator/](generator/) | Pure modules shared by the tool and a later CLI: `generate(model)` → page HTML, `parse(html, DOMParser)` → model. The page skeleton is [generator/template.js](generator/template.js); keep it in sync with `examples/`. |
+| [tool/](tool/) | The page builder (form, connections, preview, open/save). Built into `dist/rw-tool/`. It must not import `reader/` modules: `reader/Globals.js` constructs the whole reader on import. Theme and font set lists come from `RW_THEMES` / `RW_FONT_SETS`, defined at build time in `scripts/common.mjs`. |
+| [test/](test/) | `npm test` (node:test + linkedom). The example pages are the generator's round-trip fixtures. |
 | [scripts/](scripts/) | `common.mjs` (shared esbuild options + asset copy), `build.mjs`, `dev.mjs`. |
 | `dist/rw-reader/` | Build output (gitignored). This folder is what users upload. |
+| `dist/rw-tool/` | Build output: the page builder. Must sit next to `rw-reader/`, which its preview uses. |
 
 ## Key Rules
 
@@ -35,6 +39,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 
 ## Commands
 
-- `npm run dev`: dev server on port 8000 (override with `PORT`). `dist/rw-reader/rw-reader.{js,css}` is rebuilt in memory on every request, unminified and with sourcemaps, at the same URLs as production. Only themes and images are copied to disk.
-- `npm run build`: production build into `dist/rw-reader/` (minified). Rebuild after every reader pin bump.
+- `npm run dev`: dev server on port 8000 (override with `PORT`). `dist/rw-reader/` bundles and all of `dist/rw-tool/` are rebuilt in memory on every request, unminified and with sourcemaps, at the same URLs as production. Only themes and images are copied to disk.
+- `npm run build`: production build into `dist/rw-reader/` and `dist/rw-tool/` (minified). Rebuild after every reader pin bump.
+- `npm test`: generator tests.
 - `npm run preview`: build, then serve the repo with `python3 -m http.server 8000`.
