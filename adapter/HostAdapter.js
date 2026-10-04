@@ -136,9 +136,9 @@ export default class HostAdapter {
             }
 
 
-            const {hdocDataJSON, content} = getHdocJsonAndContentFromCurrentDocument()
+            const {hdocDataJSON, content, title, base} = getHdocJsonAndContentFromCurrentDocument()
 
-            const dataObject = parseHtmlPageWithEmbeddedHDoc(currentLocation, content, hdocDataJSON)
+            const dataObject = parseHtmlPageWithEmbeddedHDoc(currentLocation, content, hdocDataJSON, {title, base})
 
             if(dataObject ){
                 loadUIAndIcons()
