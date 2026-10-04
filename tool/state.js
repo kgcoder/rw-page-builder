@@ -47,6 +47,11 @@ export function changed(structural) {
     emit(structural ? 'replace' : 'edit')
 }
 
+// The model changed without an edit in the form (e.g. flinks re-anchored after opening a page).
+export function markDirty() {
+    dirty = true
+}
+
 export function markSaved(newFileName) {
     if (newFileName) fileName = newFileName
     dirty = false

@@ -16,10 +16,12 @@ https://github.com/kgcoder/readers-web-specs
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { DOMParser } from 'linkedom'
+import { JSDOM } from 'jsdom'
 import { parse } from '../generator/parse.js'
 import { generate } from '../generator/generate.js'
 import { createModel } from '../generator/model.js'
+
+const { DOMParser } = new JSDOM('').window
 
 const example = name => readFileSync(new URL(`../examples/${name}`, import.meta.url), 'utf8')
 

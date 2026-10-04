@@ -31,7 +31,8 @@ export function isAbsoluteUrl(url) {
 }
 
 // fieldErrors: problems the form tracks itself (e.g. panels JSON that doesn't parse), by label.
-export function validate(model, fieldErrors) {
+// flinkResults: per connection, the anchorFlink() results from generator/flinks.js.
+export function validate(model, fieldErrors, flinkResults) {
     const errors = []
     const warnings = []
 
@@ -52,6 +53,11 @@ export function validate(model, fieldErrors) {
         const name = 'Connection ' + (i + 1)
         if (!isAbsoluteUrl(con.url)) errors.push(name + ': the URL must be an absolute http(s) URL.')
         if (!con.flinks.length) warnings.push(name + ' has no flinks.')
+        const broken = (flinkResults && flinkResults[i] || []).filter(r => r.status === 'broken').length
+        if (broken) {
+            warnings.push(name + ': ' + (broken === 1 ? '1 flink no longer matches' : broken + ' flinks no longer match')
+                + ' the content. Restore the text, remove the flink, or link it again in the RW Reader extension.')
+        }
     })
 
     for (const key of Object.keys(fieldErrors || {})) {

@@ -17,6 +17,8 @@ Code licensed under the MIT License.
     --danger-bg: #fdecea;
     --warning: #8a5a00;
     --warning-bg: #fff6dd;
+    --info: #1f5fa8;
+    --info-bg: #e8f1fc;
     --input-bg: #ffffff;
     --code-font: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     color-scheme: light;
@@ -35,6 +37,8 @@ Code licensed under the MIT License.
         --danger-bg: #3a1f1d;
         --warning: #e8b94a;
         --warning-bg: #36301c;
+        --info: #8bb8f0;
+        --info-bg: #1b2a3d;
         --input-bg: #15171a;
         color-scheme: dark;
     }
@@ -651,3 +655,38 @@ button.icon {
 .format-toolbar .bold { font-weight: 700; }
 .format-toolbar .italic { font-style: italic; }
 .format-toolbar .code { font-family: var(--code-font); }
+
+.messages .info {
+    background: var(--info-bg);
+    color: var(--info);
+}
+
+/* ---- flink statuses */
+
+.flink-statuses {
+    list-style: none;
+    margin: -4px 0 10px;
+    padding: 0;
+    font-size: 12px;
+}
+
+.flink-statuses:empty {
+    display: none;
+}
+
+.flink-statuses li {
+    padding: 1px 0;
+    overflow-wrap: anywhere;
+}
+
+.flink-ok {
+    color: var(--muted);
+}
+
+.flink-moved {
+    color: var(--info);
+}
+
+.flink-broken {
+    color: var(--danger);
+}

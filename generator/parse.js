@@ -13,7 +13,7 @@ https://github.com/kgcoder/readers-web-specs
 */
 
 // parse(html) -> model. The inverse of generate(); also reads pages written by hand in the same format.
-// DOMParserImpl is passed in so this works in Node (linkedom) as well as in the browser.
+// DOMParserImpl is passed in so this works in Node (jsdom) as well as in the browser.
 import { createModel } from './model.js'
 import { readSource } from './sources.js'
 

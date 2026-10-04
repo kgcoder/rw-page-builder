@@ -17,9 +17,11 @@ https://github.com/kgcoder/readers-web-specs
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { DOMParser } from 'linkedom'
+import { JSDOM } from 'jsdom'
 import { parse } from '../generator/parse.js'
 import { blocksToHtml, htmlToBlocks, newBlock } from '../tool/blocks/convert.js'
+
+const { DOMParser } = new JSDOM('').window
 
 const toBlocks = html => htmlToBlocks(html, DOMParser)
 const types = blocks => blocks.map(b => b.type + (b.level || '')).join(' ')
