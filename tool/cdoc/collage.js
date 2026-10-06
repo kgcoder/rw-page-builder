@@ -304,9 +304,14 @@ export function itemXml(item) {
 export function generatedXml(item, forStage) {
     if (item.kind === 'image') {
         const attrs = [['x', n(item.x)], ['y', n(item.y)], ['width', n(item.width)], ['height', n(item.height)], ['href', item.href]]
-        // Before item.extra: the HTML parser the sanitizer uses keeps the first of two equal attributes.
-        if (forStage) attrs.push(['preserveAspectRatio', 'none'])
-        return '<image' + attrString(attrs.concat(item.extra)) + '/>'
+        let extra = item.extra
+        if (forStage) {
+            // Replaces the image's own value: the sanitizer parses SVG as XML, and a duplicate attribute
+            // makes the whole element disappear.
+            attrs.push(['preserveAspectRatio', 'none'])
+            extra = extra.filter(([name]) => name !== 'preserveAspectRatio')
+        }
+        return '<image' + attrString(attrs.concat(extra)) + '/>'
     }
     if (item.kind === 'text') {
         const attrs = [['x', n(item.x)], ['y', n(item.y)], ['font-size', n(item.fontSize)]]

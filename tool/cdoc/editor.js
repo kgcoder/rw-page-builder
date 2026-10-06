@@ -46,8 +46,11 @@ function svgEl(tag, attrs) {
 // markup (one or more SVG elements) through the reader's sanitizer, appended to parent.
 function appendSanitized(parent, markup) {
     const wrapped = '<svg xmlns="' + SVG_NS + '" xmlns:xlink="' + XLINK_NS + '">' + markup + '</svg>'
-    const fragment = DOMPurify.sanitize(wrapped, Object.assign({ RETURN_DOM_FRAGMENT: true }, SANITIZE_CONFIG))
-    const root = fragment && fragment.firstChild
+    // As a string, parsed by this document: DOMPurify builds DOM results in its own inert XML document,
+    // and an <image> taken from there (moved or imported) may never load.
+    const holder = document.createElementNS(SVG_NS, 'g')
+    holder.innerHTML = DOMPurify.sanitize(wrapped, SANITIZE_CONFIG)
+    const root = holder.firstElementChild
     if (!root) return
     while (root.firstChild) parent.appendChild(root.firstChild)
 }

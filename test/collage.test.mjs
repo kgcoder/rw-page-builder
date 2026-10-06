@@ -133,6 +133,8 @@ test('images: preserveAspectRatio only on the stage, or when the source had it',
     const kept = toCollage('<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><image x="0" y="0" width="5" height="5" href="a.png" preserveAspectRatio="xMinYMin"/></svg>').items[0]
     kept.source = null
     assert.equal(generatedXml(kept), '<image x="0" y="0" width="5" height="5" href="a.png" preserveAspectRatio="xMinYMin"/>')
+    // The stage replaces it rather than adding a second one (a duplicate attribute is an XML error).
+    assert.equal(generatedXml(kept, true), '<image x="0" y="0" width="5" height="5" href="a.png" preserveAspectRatio="none"/>')
 })
 
 
