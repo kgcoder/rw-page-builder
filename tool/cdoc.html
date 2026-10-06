@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CDOC editor</title>
+    <link rel="stylesheet" href="rw-tool.css">
+    <script defer src="rw-cdoc.js"></script>
+</head>
+
+<body>
+
+<header class="toolbar">
+    <h1 class="toolbar-title">CDOC editor</h1>
+    <div class="toolbar-actions">
+        <button type="button" id="new-button">New</button>
+        <button type="button" id="paste-button">Paste SVG…</button>
+        <span class="toolbar-separator"></span>
+        <button type="button" id="copy-button" class="primary">Copy SVG</button>
+    </div>
+    <span id="status" class="status" role="status"></span>
+</header>
+
+<main class="cdoc-page-main" id="editor-holder"></main>
+
+<dialog id="paste-dialog" class="paste-dialog">
+    <form method="dialog">
+        <h2>Paste SVG</h2>
+        <p class="hint">An &lt;svg&gt; element with width and height, e.g. copied from a CDOC. It replaces the current collage.</p>
+        <textarea id="paste-input" class="code" rows="14" spellcheck="false"></textarea>
+        <div class="dialog-buttons">
+            <button type="submit" value="cancel">Cancel</button>
+            <button type="submit" value="load" class="primary">Load</button>
+        </div>
+    </form>
+</dialog>
+
+</body>
+</html>

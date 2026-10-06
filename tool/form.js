@@ -16,6 +16,8 @@ https://github.com/kgcoder/readers-web-specs
 // The form. It's rebuilt from the model when a document is opened or its type changes;
 // typing only updates the model.
 import { createBlockEditor } from './blocks/editor.js'
+import { emptySvg } from './cdoc/collage.js'
+import { createCollageEditor } from './cdoc/editor.js'
 import { renderConnections } from './connections.js'
 import { h } from './dom.js'
 import { FONT_SETS, THEMES, field, select as selectControl, textInput as textControl } from './fields.js'
@@ -74,7 +76,12 @@ function documentSection(model) {
         h('label', { class: 'type-option' },
             h('input', {
                 type: 'radio', name: 'doc-type', value: t.id, checked: model.type === t.id,
-                onChange: () => { model.type = t.id; changed(true) },
+                onChange: () => {
+                    model.type = t.id
+                    // A new collage starts with the default frame; an opened page keeps its SVG.
+                    if (t.id === 'cdoc' && !model.svg.trim()) model.svg = emptySvg()
+                    changed(true)
+                },
             }),
             h('span', { class: 'type-label' }, t.label),
             h('span', { class: 'type-hint' }, t.hint))))
@@ -108,12 +115,7 @@ function documentSection(model) {
 
 function contentSection(model) {
     if (model.type === 'hdoc') return hdocContentSection(model)
-    if (model.type === 'cdoc') {
-        return h('fieldset', { class: 'section' },
-            h('legend', null, 'Collage'),
-            field('SVG', textInput(() => model.svg, v => { model.svg = v }, { rows: 18, class: 'code', spellcheck: 'false' }),
-                'An <svg> element with width and height. Connections attach to x/y points on it.'))
-    }
+    if (model.type === 'cdoc') return cdocContentSection(model)
     return h('fieldset', { class: 'section' },
         h('legend', null, 'Main document'),
         field('URL', textInput(() => model.mainUrl, v => { model.mainUrl = v.trim() }, { type: 'url', placeholder: 'https://example.com/article.html' }),
@@ -121,49 +123,86 @@ function contentSection(model) {
         field('Description', textInput(() => model.description, v => { model.description = v }, { rows: 3 })))
 }
 
-const CONTENT_TAB_KEY = 'rw-page-builder.content-tab'
-
 // Two views of model.contentHtml. The block editor rewrites the HTML only when a block is edited,
 // so switching tabs without editing never changes it.
 function hdocContentSection(model) {
     const editor = createBlockEditor(value => { model.contentHtml = value; changed() })
     const htmlInput = textInput(() => model.contentHtml, v => { model.contentHtml = v }, { rows: 22, class: 'code', spellcheck: 'false' })
-    const blocksPane = h('div', { class: 'tab-pane' }, editor.element,
-        h('p', { class: 'hint' }, 'Select text to format it or add a link (⌘K). Enter starts a new paragraph, Shift+Enter adds a line break.'))
-    const htmlPane = h('div', { class: 'tab-pane' }, htmlInput,
-        h('p', { class: 'hint' }, 'The body of the document, without the title. Scripts, styles and form elements are removed by the reader.'))
+    editor.load(model.contentHtml)
+    return h('fieldset', { class: 'section' },
+        h('legend', null, 'Content'),
+        contentTabs('rw-page-builder.content-tab', [
+            {
+                id: 'blocks', label: 'Blocks',
+                pane: [editor.element,
+                    h('p', { class: 'hint' }, 'Select text to format it or add a link (⌘K). Enter starts a new paragraph, Shift+Enter adds a line break.')],
+                onShow: () => { if (editor.getHtml() !== model.contentHtml) editor.load(model.contentHtml) },
+            },
+            {
+                id: 'html', label: 'HTML',
+                pane: [htmlInput,
+                    h('p', { class: 'hint' }, 'The body of the document, without the title. Scripts, styles and form elements are removed by the reader.')],
+                onShow: () => { htmlInput.value = model.contentHtml },
+            },
+        ]))
+}
 
-    const tabs = {}
-    const tabBar = h('div', { class: 'tabs', role: 'tablist' }, [['blocks', 'Blocks'], ['html', 'HTML']].map(([id, label]) => {
-        tabs[id] = h('button', { type: 'button', role: 'tab', class: 'tab', onClick: () => show(id) }, label)
-        return tabs[id]
+// Two views of model.svg, like the HDOC content: the visual editor writes the SVG only when something is edited.
+function cdocContentSection(model) {
+    const editor = createCollageEditor(value => { model.svg = value; changed() })
+    const svgInput = textInput(() => model.svg, v => { model.svg = v }, { rows: 18, class: 'code', spellcheck: 'false' })
+    editor.load(model.svg)
+    return h('fieldset', { class: 'section' },
+        h('legend', null, 'Collage'),
+        contentTabs('rw-page-builder.collage-tab', [
+            {
+                id: 'visual', label: 'Visual',
+                pane: [editor.element,
+                    h('p', { class: 'hint' }, 'Drag to move, drag a corner to resize. Items snap to each other and to the frame (hold Alt to turn it off). ',
+                        h('a', { href: 'cdoc.html', target: '_blank' }, 'The same editor on its own page'), ' makes just the SVG, to copy.')],
+                onShow: () => { if (editor.getSvg() !== model.svg) editor.load(model.svg) },
+            },
+            {
+                id: 'svg', label: 'SVG',
+                pane: [svgInput,
+                    h('p', { class: 'hint' }, 'An <svg> element with width and height. Connections attach to x/y points on it.')],
+                onShow: () => { svgInput.value = model.svg },
+            },
+        ]))
+}
+
+// Tabs over panes: [{id, label, pane, onShow}]. The last tab shown is remembered under storageKey.
+function contentTabs(storageKey, tabs) {
+    const buttons = {}
+    const panes = {}
+    const bar = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(t => {
+        buttons[t.id] = h('button', { type: 'button', role: 'tab', class: 'tab', onClick: () => show(t.id) }, t.label)
+        return buttons[t.id]
     }))
+    tabs.forEach(t => { panes[t.id] = h('div', { class: 'tab-pane' }, t.pane) })
 
     function show(id) {
-        if (id === 'blocks' && editor.getHtml() !== model.contentHtml) editor.load(model.contentHtml)
-        if (id === 'html') htmlInput.value = model.contentHtml
-        blocksPane.hidden = id !== 'blocks'
-        htmlPane.hidden = id !== 'html'
-        for (const key of Object.keys(tabs)) tabs[key].setAttribute('aria-selected', String(key === id))
+        tabs.forEach(t => {
+            if (t.id === id) t.onShow()
+            panes[t.id].hidden = t.id !== id
+            buttons[t.id].setAttribute('aria-selected', String(t.id === id))
+        })
         try {
-            localStorage.setItem(CONTENT_TAB_KEY, id)
+            localStorage.setItem(storageKey, id)
         } catch (e) {
             // Only a convenience.
         }
     }
 
-    let initial = 'blocks'
+    let initial = tabs[0].id
     try {
-        if (localStorage.getItem(CONTENT_TAB_KEY) === 'html') initial = 'html'
+        const stored = localStorage.getItem(storageKey)
+        if (tabs.some(t => t.id === stored)) initial = stored
     } catch (e) {
         // Storage may be unavailable.
     }
-    editor.load(model.contentHtml)
     show(initial)
-
-    return h('fieldset', { class: 'section' },
-        h('legend', null, 'Content'),
-        tabBar, blocksPane, htmlPane)
+    return [bar].concat(tabs.map(t => panes[t.id]))
 }
 
 function postNavSection(model) {

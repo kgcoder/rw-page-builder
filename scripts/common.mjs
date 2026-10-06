@@ -35,6 +35,9 @@ export const esbuildOptions = {
         { in: 'tool/tool.css', out: 'rw-tool/rw-tool' },
         { in: 'tool/index.html', out: 'rw-tool/index' },
         { in: 'tool/preview.html', out: 'rw-tool/preview' },
+        // The CDOC editor on its own page.
+        { in: 'tool/cdoc/standalone.js', out: 'rw-tool/rw-cdoc' },
+        { in: 'tool/cdoc.html', out: 'rw-tool/cdoc' },
     ],
     outdir: distDir,
     bundle: true,

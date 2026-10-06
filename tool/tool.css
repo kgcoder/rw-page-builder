@@ -5,6 +5,8 @@ Copyright (c) 2026 Karen Grigorian
 Code licensed under the MIT License.
 */
 
+@import "./cdoc/cdoc.css";
+
 :root {
     --bg: #f6f6f4;
     --panel: #ffffff;

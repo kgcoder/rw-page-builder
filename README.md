@@ -45,6 +45,8 @@ In dev mode the bundle is rebuilt in memory on each request, so edits in `adapte
 
 - **Documents.** Choose HDOC, CDOC or CONDOC, fill in the title and the other fields, and save the `.html` file (or copy its HTML). Saving is disabled while there are errors, such as a missing title or a connection URL that isn't absolute.
 - **HDOC content** is edited as blocks (paragraphs, headings, lists, quotes, images, code, separators) or as HTML; both tabs edit the same content. Markup that can't be shown as blocks is kept as an HTML block, unchanged. Select text to format it or add a link (⌘K).
+- **CDOC collage** is edited visually or as SVG; both tabs edit the same SVG. The frame can be any whole-number size (400×300 by default) with a transparent or colored background. Add images by URL and texts, then move and resize them with the mouse. They snap to each other and to the frame, and red lines show what lines up (hold Alt to turn snapping off). Texts can be aligned left, center or right (SVG's `text-anchor`), and resizing a text changes its font size. Shapes the editor doesn't know (from an SVG written by hand) are shown but locked, and kept exactly as written. In the reader, images are always drawn above texts and shapes.
+- **CDOC editor page.** The same editor is also its own page, `rw-tool/cdoc.html` (toolbar: *CDOC editor*). It only makes the SVG: *Copy SVG* copies it, ready to paste into a CDOC. The work in progress is kept in your browser.
 - **Connections.** Flinks are made in the RW Reader extension and pasted into a connection, one per line. When you edit an HDOC's content, its flinks follow the text they point at; a flink whose text was changed or removed is kept and marked "Not found".
 - **Opening pages.** Open an existing page from a file, a URL, or by dropping it on the window, edit it and save it again. The page is the source of truth: nothing is stored anywhere else.
 - **Preview.** The page is shown with the real reader as you type.
@@ -55,6 +57,6 @@ Site settings are saved in your browser. *Copy rw-site.json* copies them, ready 
 ## Later
 
 - **CLI.** The generator (`generator/`) is shared code with no UI, so a command-line tool for batch generation is mostly a small script.
-- **CDOC editor.** A separate tool for making the SVG of a CDOC: a frame (a rectangle of any size), images by URL, possibly lines and hyperlinks. Its output is pasted into a new CDOC.
+- **CDOC editor: lines and hyperlinks.** The collage editor makes frames, images and texts; lines and hyperlinks could come next.
 - **Cross-origin connections.** Site owners may run a proxy endpoint, on their site or on a service (Supabase, Firebase, etc.); restrictions such as allowed URLs are up to them, outside this project. Without a proxy endpoint, the current popup stays: it lists the documents that can't be loaded and links to the RW Reader extension.
 - **Preview isolation.** The preview runs in a frame on the tool's own origin, so a page opened in the tool could run scripts there. Fine for your own pages; to be revisited before the tool is offered publicly (e.g. on readersweb.org).

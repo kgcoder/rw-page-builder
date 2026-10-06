@@ -1,0 +1,340 @@
+/*
+RW Page Builder
+
+Copyright (c) 2026 Karen Grigorian
+Code licensed under the MIT License.
+*/
+
+/* The collage editor (tool/cdoc/editor.js), in the page builder and on cdoc.html. */
+
+.cdoc-editor {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 8px;
+    min-width: 0;
+}
+
+.cdoc-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.cdoc-toolbar .toolbar-separator {
+    margin: 0 2px;
+}
+
+.cdoc-toolbar-spacer {
+    flex: 1;
+}
+
+.cdoc-toolbar button[aria-pressed="true"] {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.cdoc-zoom {
+    min-width: 3.2em;
+    text-align: center;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.cdoc-body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 0;
+}
+
+/* ---- stage */
+
+.cdoc-stage {
+    position: relative;
+    height: var(--cdoc-stage-height, 420px);
+    overflow: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+.cdoc-stage:focus {
+    outline: none;
+}
+
+.cdoc-stage:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+/* margin: auto centers the frame without cutting it off when it's larger than the stage. */
+.cdoc-canvas {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    min-height: 100%;
+    padding: 24px; /* PAD in editor.js */
+}
+
+/* A transparent frame shows a checkerboard. */
+.cdoc-svg {
+    display: block;
+    flex: none;
+    margin: auto;
+    overflow: visible;
+    touch-action: none;
+    background: repeating-conic-gradient(#e4e4e4 0% 25%, #ffffff 0% 50%) 0 0 / 16px 16px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+
+.cdoc-raw {
+    pointer-events: none;
+}
+
+.cdoc-overlay * {
+    vector-effect: non-scaling-stroke;
+}
+
+.cdoc-frame-outline {
+    fill: none;
+    stroke: var(--border);
+    stroke-width: 1;
+    pointer-events: none;
+}
+
+.cdoc-selection {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    pointer-events: none;
+}
+
+.cdoc-handle {
+    fill: #ffffff;
+    stroke: var(--accent);
+    stroke-width: 1.5;
+}
+
+.cdoc-handle-nw, .cdoc-handle-se {
+    cursor: nwse-resize;
+}
+
+.cdoc-handle-ne, .cdoc-handle-sw {
+    cursor: nesw-resize;
+}
+
+.cdoc-frame-handle {
+    fill: var(--panel);
+    stroke: var(--muted);
+    stroke-width: 1;
+}
+
+.cdoc-frame-handle[data-frame-handle="e"] {
+    cursor: ew-resize;
+}
+
+.cdoc-frame-handle[data-frame-handle="s"] {
+    cursor: ns-resize;
+}
+
+.cdoc-frame-handle[data-frame-handle="se"] {
+    cursor: nwse-resize;
+}
+
+.cdoc-guide {
+    stroke: #ff0000;
+    stroke-width: 1;
+    pointer-events: none;
+}
+
+.cdoc-size-label {
+    fill: var(--muted);
+    font-family: system-ui, sans-serif;
+    pointer-events: none;
+}
+
+/* ---- inspector */
+
+.cdoc-inspector {
+    padding: 10px 12px 2px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel);
+    min-width: 0;
+}
+
+.cdoc-inspector h3 {
+    margin: 0 0 8px;
+    font-size: 13px;
+}
+
+.cdoc-inspector .row > .field {
+    flex: 1 1 90px;
+}
+
+.cdoc-numbers > .field {
+    flex: 1 1 70px;
+}
+
+.cdoc-inspector input[type="number"] {
+    width: 100%;
+    padding: 6px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+}
+
+.cdoc-inspector .inline-buttons {
+    align-items: center;
+}
+
+.cdoc-inspector .field-error {
+    margin: -4px 0 10px;
+}
+
+.cdoc-segmented {
+    display: flex;
+}
+
+.cdoc-segmented button {
+    border-radius: 0;
+    margin-left: -1px;
+}
+
+.cdoc-segmented button:first-child {
+    margin-left: 0;
+    border-radius: 6px 0 0 6px;
+}
+
+.cdoc-segmented button:last-child {
+    border-radius: 0 6px 6px 0;
+}
+
+.cdoc-segmented button[aria-pressed="true"] {
+    position: relative;
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+}
+
+.cdoc-color {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cdoc-color input[type="color"] {
+    flex: none;
+    width: 36px;
+    height: 28px;
+    padding: 2px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--input-bg);
+}
+
+.cdoc-color .cdoc-color-text {
+    flex: 1;
+    min-width: 0;
+    font-family: var(--code-font);
+    font-size: 12.5px;
+}
+
+.cdoc-message {
+    margin-bottom: 0;
+}
+
+/* ---- the standalone page (cdoc.html) */
+
+.cdoc-page-main {
+    flex: 1;
+    min-height: 0;
+    padding: 16px;
+    overflow: auto;
+}
+
+.cdoc-page-main .cdoc-editor {
+    height: 100%;
+    margin: 0;
+}
+
+.cdoc-page-main .cdoc-body {
+    flex: 1;
+    min-height: 0;
+    flex-direction: row;
+    align-items: stretch;
+}
+
+.cdoc-page-main .cdoc-stage {
+    flex: 1;
+    height: auto;
+    min-height: 300px;
+}
+
+.cdoc-page-main .cdoc-inspector {
+    flex: none;
+    width: 300px;
+    overflow-y: auto;
+}
+
+@media (max-width: 800px) {
+    .cdoc-page-main .cdoc-editor {
+        height: auto;
+    }
+    .cdoc-page-main .cdoc-body {
+        flex-direction: column;
+    }
+    .cdoc-page-main .cdoc-stage {
+        flex: none;
+        height: 60vh;
+    }
+    .cdoc-page-main .cdoc-inspector {
+        width: auto;
+    }
+}
+
+.paste-dialog {
+    width: min(640px, calc(100vw - 32px));
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--fg);
+}
+
+.paste-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.paste-dialog h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.paste-dialog textarea {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+a.button-link {
+    padding: 5px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--panel);
+    color: inherit;
+    text-decoration: none;
+}
+
+a.button-link:hover {
+    border-color: var(--accent);
+}
