@@ -80,3 +80,16 @@ test('escapes </script> inside the embedded data', () => {
     assert.equal(html.match(/<\/script>/g).length, 2) // the reader script tag and hdoc-data
     assert.equal(parse(html, DOMParser).header.h1, 'Has </script> in it')
 })
+
+test('writes the site head code before </head> and reads it back', () => {
+    const model = createModel('hdoc')
+    model.header.h1 = 'T'
+    model.site.headCode = '<script async src="https://www.googletagmanager.com/gtag/js?id=G-X"></script>\n<script>gtag("js", new Date())</script>'
+    const html = generate(model)
+    const head = html.slice(0, html.indexOf('</head>'))
+    assert.ok(head.includes(model.site.headCode))
+    assert.equal(parse(html, DOMParser).site.headCode, model.site.headCode)
+
+    model.site.headCode = '  '
+    assert.ok(!generate(model).includes('rw-head-code'))
+})

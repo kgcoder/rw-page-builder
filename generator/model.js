@@ -46,5 +46,7 @@ export function createSiteSettings() {
         theme: 'light',
         fontSet: 'default',
         commentsLabel: '',
+        // Code added to the page's <head> as is (e.g. an analytics snippet).
+        headCode: '',
     }
 }

@@ -38,6 +38,13 @@ export function textInput(get, set, notify, props) {
     }, props))
 }
 
+// The site's code for <head> (site settings, or a page with its own settings).
+export function headCodeField(get, set, notify) {
+    return field('Code added to <head>',
+        textInput(get, set, notify, { rows: 6, class: 'code', spellcheck: 'false', placeholder: '<script async src="https://www.googletagmanager.com/gtag/js?id=G-…"></script>' }),
+        'Added as is to every page, just before </head>: e.g. a Google Analytics snippet. Not run in the preview.')
+}
+
 // options: [{id, label}]. A current value that isn't in the list (e.g. from a page made with another
 // reader version) is kept as an extra option.
 export function select(options, get, set, notify) {

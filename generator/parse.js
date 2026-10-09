@@ -14,6 +14,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // parse(html) -> model. The inverse of generate(); also reads pages written by hand in the same format.
 // DOMParserImpl is passed in so this works in Node (jsdom) as well as in the browser.
+import { HEAD_CODE_END, HEAD_CODE_START } from './generate.js'
 import { createModel } from './model.js'
 import { readSource } from './sources.js'
 
@@ -51,6 +52,7 @@ export function parse(html, DOMParserImpl) {
     model.pageTitle = titleEl ? titleEl.textContent : ''
 
     readSiteSettings(model.site, doc)
+    model.site.headCode = readHeadCode(html)
     return model
 }
 
@@ -80,6 +82,15 @@ function readHdoc(model, doc, script) {
 
     const contentEl = doc.querySelector('.hdoc-content')
     model.contentHtml = contentEl ? contentEl.innerHTML.trim() : ''
+}
+
+// Read from the HTML text rather than the DOM, so the code comes back exactly as it was written.
+function readHeadCode(html) {
+    const start = html.indexOf(HEAD_CODE_START)
+    if (start === -1) return ''
+    const end = html.indexOf(HEAD_CODE_END, start)
+    if (end === -1) return ''
+    return html.slice(start + HEAD_CODE_START.length, end).trim()
 }
 
 function readSiteSettings(site, doc) {

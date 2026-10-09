@@ -27,7 +27,7 @@ export function pageHtml(p) {
     <link rel="stylesheet" href="${p.assetsUrl}rw-reader.css">
     <link rel="stylesheet" href="${p.assetsUrl}themes/${p.theme}.css">
     <script defer src="${p.assetsUrl}rw-reader.js" data-font-set="${p.fontSet}"${p.scriptExtraAttrs}></script>
-</head>
+${p.headCode}</head>
 
 <body>
 

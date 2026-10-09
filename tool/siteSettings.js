@@ -14,7 +14,7 @@ https://github.com/kgcoder/readers-web-specs
 
 
 // Site settings: what's the same on every page of a site (reader assets URL, theme, font set, comments
-// label, default language, and the top, sidebar and bottom panels). They're kept in this browser's
+// label, default language, code added to <head>, and the top, sidebar and bottom panels). They're kept in this browser's
 // localStorage, can be exported and imported as rw-site.json, and are loaded from an rw-site.json next
 // to the tool when it runs on the site.
 //
@@ -31,7 +31,7 @@ let serverSite = null
 const listeners = []
 
 function defaultSite() {
-    return { assetsUrl: '/rw-reader/', theme: 'light', fontSet: 'default', commentsLabel: '', lang: 'en', panels: {} }
+    return { assetsUrl: '/rw-reader/', theme: 'light', fontSet: 'default', commentsLabel: '', lang: 'en', headCode: '', panels: {} }
 }
 
 export function getSite() {
@@ -138,7 +138,7 @@ export function importSite(file) {
 // Takes the known fields from parsed JSON, with defaults for missing or wrong ones.
 function normalizeSite(data) {
     const result = defaultSite()
-    for (const key of ['assetsUrl', 'theme', 'fontSet', 'commentsLabel', 'lang']) {
+    for (const key of ['assetsUrl', 'theme', 'fontSet', 'commentsLabel', 'lang', 'headCode']) {
         if (typeof data[key] === 'string') result[key] = data[key]
     }
     if (data.panels && typeof data.panels === 'object' && !Array.isArray(data.panels)) {
@@ -155,7 +155,7 @@ function normalizeSite(data) {
 // Copies the site settings into a document (panels only for HDOC; post-nav and comments are per page).
 export function applySiteToModel(model) {
     const copy = JSON.parse(JSON.stringify(site))
-    model.site = { assetsUrl: copy.assetsUrl, theme: copy.theme, fontSet: copy.fontSet, commentsLabel: copy.commentsLabel }
+    model.site = { assetsUrl: copy.assetsUrl, theme: copy.theme, fontSet: copy.fontSet, commentsLabel: copy.commentsLabel, headCode: copy.headCode }
     for (const key of SITE_PANEL_KEYS) {
         if (copy.panels[key]) model.panels[key] = copy.panels[key]
         else delete model.panels[key]
@@ -168,6 +168,7 @@ export function modelMatchesSite(model) {
     const same = ['theme', 'fontSet'].every(key => ownSite[key] === site[key])
         && withSlash(ownSite.assetsUrl) === withSlash(site.assetsUrl)
         && (ownSite.commentsLabel || '') === (site.commentsLabel || '')
+        && (ownSite.headCode || '').trim() === (site.headCode || '').trim()
     if (!same) return false
     if (model.type !== 'hdoc') return true
     return SITE_PANEL_KEYS.every(key => stableStringify(model.panels[key]) === stableStringify(site.panels[key]))

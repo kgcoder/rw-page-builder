@@ -20,7 +20,7 @@ import { emptySvg } from './cdoc/collage.js'
 import { createCollageEditor } from './cdoc/editor.js'
 import { renderConnections } from './connections.js'
 import { h } from './dom.js'
-import { FONT_SETS, THEMES, field, select as selectControl, textInput as textControl } from './fields.js'
+import { FONT_SETS, THEMES, field, headCodeField, select as selectControl, textInput as textControl } from './fields.js'
 import { renderPanelsEditor } from './panelsEditor.js'
 import { applySiteToModel, getSite } from './siteSettings.js'
 import { changed, getModel } from './state.js'
@@ -241,7 +241,8 @@ function appearanceSection(model, actions) {
         const siteSettings = getSite()
         const panels = ['top', 'sidebar', 'bottom'].filter(key => siteSettings.panels[key])
         const summary = 'Theme ' + site.theme + ', font set ' + site.fontSet + ', reader at ' + site.assetsUrl
-            + (model.type === 'hdoc' ? '; panels: ' + (panels.length ? panels.join(', ') : 'none') : '') + '.'
+            + (model.type === 'hdoc' ? '; panels: ' + (panels.length ? panels.join(', ') : 'none') : '')
+            + (site.headCode && site.headCode.trim() ? '; code added to <head>' : '') + '.'
         return h('fieldset', { class: 'section' }, legend,
             h('p', null, 'Uses the site settings. ', h('span', { class: 'hint' }, summary)),
             h('div', { class: 'inline-buttons' },
@@ -269,6 +270,7 @@ function appearanceSection(model, actions) {
             field('Theme', select(THEMES, () => site.theme, v => { site.theme = v })),
             field('Font set', select(FONT_SETS, () => site.fontSet, v => { site.fontSet = v }))),
         field('Comments label', textInput(() => site.commentsLabel, v => { site.commentsLabel = v }, { placeholder: 'Open in a new tab to view comments' })),
+        headCodeField(() => site.headCode || '', v => { site.headCode = v }, () => changed()),
         model.type === 'hdoc' ? h('div', null,
             h('span', { class: 'field-label' }, 'Panels'),
             renderPanelsEditor(model.panels, () => changed())) : null)

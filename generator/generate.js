@@ -48,6 +48,7 @@ export function generate(model) {
         theme: escapeHtml(site.theme || 'light'),
         fontSet: escapeHtml(site.fontSet || 'default'),
         scriptExtraAttrs: site.commentsLabel ? ` data-comments-label="${escapeHtml(site.commentsLabel)}"` : '',
+        headCode: headCodeHtml(site.headCode),
         h1: escapeHtml(model.header.h1),
         mainDivClass,
         mainContent,
@@ -57,6 +58,16 @@ export function generate(model) {
         bottom: bottomPanel(panels),
         dataScript,
     })
+}
+
+// The site's own code (e.g. analytics), written as is between marker comments so parse() can read it back.
+export const HEAD_CODE_START = '<!-- rw-head-code -->'
+export const HEAD_CODE_END = '<!-- /rw-head-code -->'
+
+function headCodeHtml(code) {
+    const trimmed = (code || '').trim()
+    if (!trimmed) return ''
+    return `\n    ${HEAD_CODE_START}\n${trimmed}\n    ${HEAD_CODE_END}\n`
 }
 
 // The hdoc-data JSON. Keys the tool doesn't know (model.extra) are written after the known ones.

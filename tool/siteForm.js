@@ -15,7 +15,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // The site settings view (toolbar: "Site settings").
 import { h, setChildren } from './dom.js'
-import { FONT_SETS, THEMES, field, select, textInput } from './fields.js'
+import { FONT_SETS, THEMES, field, headCodeField, select, textInput } from './fields.js'
 import { renderPanelsEditor } from './panelsEditor.js'
 import { SITE_FILE_NAME, copySiteJson, exportSite, getServerSite, getSite, importSite, siteEdited, useServerSite } from './siteSettings.js'
 
@@ -73,6 +73,9 @@ export function renderSiteForm(container, onStatus, onClose) {
                 field('Language of new documents', textInput(() => site.lang, v => { site.lang = v.trim() }, notify, { placeholder: 'en' })),
                 field('Comments label', textInput(() => site.commentsLabel, v => { site.commentsLabel = v }, notify,
                     { placeholder: 'Open in a new tab to view comments' })))),
+        h('fieldset', { class: 'section' },
+            h('legend', null, 'Page code'),
+            headCodeField(() => site.headCode, v => { site.headCode = v }, notify)),
         h('fieldset', { class: 'section' },
             h('legend', null, 'Panels'),
             h('p', { class: 'hint' }, 'Shown around HDOC documents.'),
