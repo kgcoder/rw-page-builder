@@ -444,6 +444,11 @@ textarea.code {
     border-bottom: 1px solid var(--border);
 }
 
+.tabs-action {
+    align-self: center;
+    margin-left: auto;
+}
+
 .tab {
     margin-bottom: -1px;
     border: 1px solid transparent;
@@ -609,6 +614,26 @@ button.icon {
 .image-fields .caption {
     border: 1px solid var(--border);
     font-size: 13px;
+}
+
+.video-block {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.video-preview {
+    width: 128px;
+    aspect-ratio: 16 / 9;
+    flex: none;
+    object-fit: cover;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg);
+}
+
+.video-block .hint.error {
+    color: var(--danger);
 }
 
 .html-block .hint {
@@ -815,4 +840,40 @@ button.icon {
 
 .view-title h2 {
     margin: 0;
+}
+
+
+/* ---- dialogs (also used by the CDOC page) */
+
+.paste-dialog {
+    width: min(640px, calc(100vw - 32px));
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--panel);
+    color: var(--fg);
+}
+
+.paste-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.paste-dialog h2 {
+    margin: 0 0 8px;
+    font-size: 16px;
+}
+
+.paste-dialog textarea {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.dialog-buttons .dialog-left {
+    margin-right: auto;
 }

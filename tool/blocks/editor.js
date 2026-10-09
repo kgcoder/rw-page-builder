@@ -16,7 +16,7 @@ https://github.com/kgcoder/readers-web-specs
 // The block editor for HDOC content. It's a view of an HTML string: load(html) splits it into blocks,
 // and every edit writes the whole HTML back through onHtml.
 import { h } from '../dom.js'
-import { blocksToHtml, blockToHtml, escapeText, htmlToBlocks, isTextBlock, newBlock } from './convert.js'
+import { blocksToHtml, blockToHtml, escapeText, htmlToBlocks, isTextBlock, newBlock, youtubeEmbedUrl, youtubeId } from './convert.js'
 import { caretAtEnd, caretAtStart, cleanEditedHtml, extractAfterCaret, installFormattingToolbar, parseInert, placeCaret, richEditable, textLength } from './inline.js'
 
 const TYPE_OPTIONS = [
@@ -28,6 +28,7 @@ const TYPE_OPTIONS = [
     ['ol', 'Numbered list'],
     ['quote', 'Quote'],
     ['image', 'Image'],
+    ['video', 'YouTube video'],
     ['code', 'Code'],
     ['separator', 'Separator'],
     ['html', 'HTML'],
@@ -39,6 +40,7 @@ const ADD_BUTTONS = [
     ['ul', 'List'],
     ['quote', 'Quote'],
     ['image', 'Image'],
+    ['video', 'Video'],
     ['code', 'Code'],
     ['separator', 'Separator'],
     ['html', 'HTML'],
@@ -177,6 +179,8 @@ export function createBlockEditor(onHtml) {
                 return listBody(block, index)
             case 'image':
                 return imageBody(block)
+            case 'video':
+                return videoBody(block)
             case 'code':
                 return autoTextarea(block.text, value => { block.text = value; edited(block) }, 'Code')
             case 'separator':
@@ -235,6 +239,35 @@ export function createBlockEditor(onHtml) {
                 }),
                 h('input', { type: 'text', placeholder: 'Alternative text', value: block.alt, onInput: e => { block.alt = e.target.value; edited(block) } }),
                 block.figure ? caption : null))
+    }
+
+    function videoBody(block) {
+        const preview = h('img', { class: 'video-preview', alt: '' })
+        const hint = h('span', { class: 'hint' })
+        const show = (src, typed) => {
+            const id = youtubeId(src)
+            if (id) preview.setAttribute('src', 'https://img.youtube.com/vi/' + id + '/hqdefault.jpg')
+            else preview.removeAttribute('src')
+            hint.textContent = typed && !src ? 'Not a YouTube link.' : 'A YouTube link: youtube.com/watch?v=…, youtu.be/…, a Shorts link, or an embed URL.'
+            hint.classList.toggle('error', !!(typed && !src))
+        }
+        show(block.src, false)
+        return h('div', { class: 'video-block' },
+            preview,
+            h('div', { class: 'image-fields' },
+                h('input', {
+                    type: 'url', class: 'focus-target', placeholder: 'YouTube link', value: block.src,
+                    onInput: e => {
+                        const typed = e.target.value.trim()
+                        const src = youtubeEmbedUrl(typed)
+                        show(src, !!typed)
+                        if (src && src !== block.src) {
+                            block.src = src
+                            edited(block)
+                        }
+                    },
+                }),
+                hint))
     }
 
     function autoTextarea(value, onValue, placeholder) {
@@ -347,6 +380,7 @@ function convertBlock(block, key) {
     else if (key === 'image') converted = newBlock('image', { caption: inline })
     else if (key === 'code') converted = newBlock('code', { text: plainText(inline.replace(/<br\s*\/?>/gi, '\n')) })
     else if (key === 'separator') converted = newBlock('separator')
+    else if (key === 'video') converted = newBlock('video')
     else converted = newBlock('html', { html: blockToHtml(block) })
 
     // A heading stays a heading (or a list a list): keep its attributes, e.g. an id used as an anchor.

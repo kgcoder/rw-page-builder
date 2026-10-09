@@ -16,6 +16,7 @@ https://github.com/kgcoder/readers-web-specs
 // The form. It's rebuilt from the model when a document is opened or its type changes;
 // typing only updates the model.
 import { createBlockEditor } from './blocks/editor.js'
+import { markdownToHtml } from './blocks/markdown.js'
 import { emptySvg } from './cdoc/collage.js'
 import { createCollageEditor } from './cdoc/editor.js'
 import { renderConnections } from './connections.js'
@@ -26,9 +27,9 @@ import { applySiteToModel, getSite } from './siteSettings.js'
 import { changed, getModel } from './state.js'
 
 const TYPES = [
-    { id: 'hdoc', label: 'HDOC', hint: 'A text document' },
-    { id: 'cdoc', label: 'CDOC', hint: 'A collage (SVG)' },
-    { id: 'condoc', label: 'CONDOC', hint: "Connections for another page" },
+    { id: 'hdoc', label: 'HDOC', hint: 'Hypertext document' },
+    { id: 'cdoc', label: 'CDOC', hint: 'Collage document' },
+    { id: 'condoc', label: 'CONDOC', hint: "Connections document" },
 ]
 
 // "" writes no <republishing-policy> at all. A value from an opened page that isn't listed is kept
@@ -129,9 +130,21 @@ function hdocContentSection(model) {
     const editor = createBlockEditor(value => { model.contentHtml = value; changed() })
     const htmlInput = textInput(() => model.contentHtml, v => { model.contentHtml = v }, { rows: 22, class: 'code', spellcheck: 'false' })
     editor.load(model.contentHtml)
+    const markdownButton = h('button', {
+        type: 'button', class: 'small tabs-action',
+        onClick: () => openMarkdownDialog(md => {
+            const result = markdownToHtml(md)
+            const titleSet = result.title !== model.header.h1
+            model.header.h1 = result.title
+            model.contentHtml = result.html
+            editor.load(model.contentHtml)
+            htmlInput.value = model.contentHtml
+            changed(titleSet) // structural when the title changed, so the form shows it
+        }, !!(model.contentHtml.trim() || model.header.h1.trim())),
+    }, 'Load from Markdown…')
     return h('fieldset', { class: 'section' },
         h('legend', null, 'Content'),
-        contentTabs('rw-page-builder.content-tab', [
+        contentTabs('rw-page-builder.content-tab', markdownButton, [
             {
                 id: 'blocks', label: 'Blocks',
                 pane: [editor.element,
@@ -154,7 +167,7 @@ function cdocContentSection(model) {
     editor.load(model.svg)
     return h('fieldset', { class: 'section' },
         h('legend', null, 'Collage'),
-        contentTabs('rw-page-builder.collage-tab', [
+        contentTabs('rw-page-builder.collage-tab', null, [
             {
                 id: 'visual', label: 'Visual',
                 pane: [editor.element,
@@ -171,14 +184,51 @@ function cdocContentSection(model) {
         ]))
 }
 
-// Tabs over panes: [{id, label, pane, onShow}]. The last tab shown is remembered under storageKey.
-function contentTabs(storageKey, tabs) {
+// Markdown to replace the HDOC content with, pasted or opened from a file. onLoad(markdown) is called
+// once it's confirmed.
+function openMarkdownDialog(onLoad, hasContent) {
+    const input = h('textarea', { class: 'code', rows: 18, spellcheck: 'false', placeholder: '# Title\n\nSome *text*…' })
+    const fileInput = h('input', {
+        type: 'file', accept: '.md,.markdown,.txt,text/markdown,text/plain', hidden: true,
+        onChange: () => {
+            const file = fileInput.files[0]
+            if (file) file.text().then(text => { input.value = text })
+        },
+    })
+    const dialog = h('dialog', { class: 'paste-dialog' },
+        h('h2', null, 'Load from Markdown'),
+        h('p', { class: 'hint' }, 'Replaces the content. Headings, lists, quotes, code, links, images and tables are converted; ',
+            'HTML (e.g. a video embed) is kept as is, and a YouTube link on its own line becomes a video. ',
+            'The title comes from a "# Title" on the first line (none: the title is cleared).'),
+        input,
+        fileInput,
+        h('div', { class: 'dialog-buttons' },
+            h('button', { type: 'button', class: 'dialog-left', onClick: () => fileInput.click() }, 'Open file…'),
+            h('button', { type: 'button', onClick: () => dialog.close() }, 'Cancel'),
+            h('button', {
+                type: 'button', class: 'primary',
+                onClick: () => {
+                    if (!input.value.trim()) return
+                    if (hasContent && !confirm('Replace the current title and content?')) return
+                    dialog.close()
+                    onLoad(input.value)
+                },
+            }, 'Load')))
+    dialog.addEventListener('close', () => dialog.remove())
+    document.body.appendChild(dialog)
+    dialog.showModal()
+    input.focus()
+}
+
+// Tabs over panes: [{id, label, pane, onShow}], with an optional extra element at the end of the tab bar.
+// The last tab shown is remembered under storageKey.
+function contentTabs(storageKey, extra, tabs) {
     const buttons = {}
     const panes = {}
     const bar = h('div', { class: 'tabs', role: 'tablist' }, tabs.map(t => {
         buttons[t.id] = h('button', { type: 'button', role: 'tab', class: 'tab', onClick: () => show(t.id) }, t.label)
         return buttons[t.id]
-    }))
+    }), extra)
     tabs.forEach(t => { panes[t.id] = h('div', { class: 'tab-pane' }, t.pane) })
 
     function show(id) {

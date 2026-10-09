@@ -24,6 +24,7 @@ https://github.com/kgcoder/readers-web-specs
 //   quote      {html, innerP, attrs}        list    {ordered, items: [html], attrs}
 //   image      {src, alt, imgAttrs, caption, figure, attrs}
 //   code       {text, wrapCode, codeAttrs, attrs}
+//   video      {src, attrs}                 (a YouTube <iframe>; attrs are the iframe's, src included)
 //   separator  {attrs}                      html    {html}   (anything else, kept as is)
 
 const INLINE_TAGS = ['a', 'abbr', 'b', 'bdi', 'bdo', 'br', 'cite', 'code', 'data', 'del', 'dfn', 'em', 'i', 'img',
@@ -42,6 +43,9 @@ export function newBlock(type, props) {
     if (type === 'list') block.items = block.items || ['']
     if (type === 'image') Object.assign(block, { src: '', alt: '', imgAttrs: [], caption: '', figure: true }, props)
     if (type === 'code') Object.assign(block, { text: '', wrapCode: true, codeAttrs: [] }, props)
+    if (type === 'video') {
+        Object.assign(block, { src: '', attrs: [['width', '560'], ['height', '315'], ['src', ''], ['frameborder', '0'], ['allowfullscreen', '']] }, props)
+    }
     if (type === 'html') block.html = block.html || ''
     return block
 }
@@ -153,6 +157,10 @@ function elementToBlock(el) {
 
     if (tag === 'hr') return { type: 'separator', attrs }
 
+    if (tag === 'iframe' && !el.childNodes.length && isYoutubeEmbed(el.getAttribute('src'))) {
+        return { type: 'video', src: el.getAttribute('src'), attrs }
+    }
+
     return { type: 'html', html: '' }
 }
 
@@ -251,6 +259,15 @@ export function blockToHtml(b) {
         }
         case 'separator':
             return `<hr${a}>`
+        case 'video': {
+            if (!b.src) return ''
+            const attrs = b.attrs.some(x => x[0] === 'src') ? b.attrs : b.attrs.concat([['src', '']])
+            const iframeAttrs = attrs.map(x => {
+                const value = x[0] === 'src' ? b.src : x[1]
+                return value === '' ? ' ' + x[0] : ` ${x[0]}="${escapeAttr(value)}"`
+            }).join('')
+            return `<iframe${iframeAttrs}></iframe>`
+        }
         default:
             return b.html.trim()
     }
@@ -270,4 +287,54 @@ export function escapeText(text) {
 
 function escapeAttr(text) {
     return String(text).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/ /g, '&nbsp;')
+}
+
+
+// ---- YouTube links
+
+const YOUTUBE_ID = /^[A-Za-z0-9_-]{11}$/
+
+function isYoutubeEmbed(src) {
+    return /^(https?:)?\/\/(www\.)?youtube(-nocookie)?\.com\/embed\/[A-Za-z0-9_-]{11}([?#]|$)/.test(src || '')
+}
+
+// Any YouTube link (watch?v=, youtu.be/, shorts/, live/, embed/, or a bare video id) as an embed URL,
+// with its start time (t= or start=) kept. null when it isn't one.
+export function youtubeEmbedUrl(link) {
+    const text = String(link || '').trim()
+    if (YOUTUBE_ID.test(text)) return 'https://www.youtube.com/embed/' + text
+    let url
+    try {
+        url = new URL(/^\/\//.test(text) ? 'https:' + text : /^[a-z][a-z0-9+.-]*:/i.test(text) ? text : 'https://' + text)
+    } catch (e) {
+        return null
+    }
+    const host = url.hostname.toLowerCase().replace(/^(www|m|music)\./, '')
+    const path = url.pathname.split('/').filter(Boolean)
+    let id = null
+    let nocookie = false
+    if (host === 'youtu.be') id = path[0]
+    else if (host === 'youtube.com' || host === 'youtube-nocookie.com') {
+        nocookie = host === 'youtube-nocookie.com'
+        if (path[0] === 'watch') id = url.searchParams.get('v')
+        else if (['embed', 'shorts', 'live', 'v'].indexOf(path[0]) !== -1) id = path[1]
+    }
+    if (!id || !YOUTUBE_ID.test(id)) return null
+    const start = seconds(url.searchParams.get('start') || url.searchParams.get('t') || (url.hash.match(/^#t=(.+)$/) || [])[1])
+    return 'https://www.youtube' + (nocookie ? '-nocookie' : '') + '.com/embed/' + id + (start ? '?start=' + start : '')
+}
+
+// The video id of a YouTube embed URL, e.g. for its thumbnail.
+export function youtubeId(embedUrl) {
+    const match = /\/embed\/([A-Za-z0-9_-]{11})/.exec(embedUrl || '')
+    return match ? match[1] : null
+}
+
+// "90", "90s", "1m30s", "1h2m3s" -> seconds.
+function seconds(value) {
+    if (!value) return 0
+    if (/^\d+$/.test(value)) return Number(value)
+    const match = /^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$/.exec(value)
+    if (!match) return 0
+    return (Number(match[1]) || 0) * 3600 + (Number(match[2]) || 0) * 60 + (Number(match[3]) || 0)
 }

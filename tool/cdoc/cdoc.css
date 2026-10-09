@@ -297,35 +297,6 @@ Code licensed under the MIT License.
     }
 }
 
-.paste-dialog {
-    width: min(640px, calc(100vw - 32px));
-    padding: 16px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    background: var(--panel);
-    color: var(--fg);
-}
-
-.paste-dialog::backdrop {
-    background: rgba(0, 0, 0, 0.35);
-}
-
-.paste-dialog h2 {
-    margin: 0 0 8px;
-    font-size: 16px;
-}
-
-.paste-dialog textarea {
-    width: 100%;
-    margin-bottom: 10px;
-}
-
-.dialog-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 6px;
-}
-
 a.button-link {
     padding: 5px 12px;
     border: 1px solid var(--border);

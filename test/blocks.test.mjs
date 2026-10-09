@@ -19,7 +19,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { JSDOM } from 'jsdom'
 import { parse } from '../generator/parse.js'
-import { blocksToHtml, htmlToBlocks, newBlock } from '../tool/blocks/convert.js'
+import { blocksToHtml, htmlToBlocks, newBlock, youtubeEmbedUrl } from '../tool/blocks/convert.js'
 
 const { DOMParser } = new JSDOM('').window
 
@@ -73,4 +73,40 @@ test('new blocks: empty ones are skipped, text is escaped', () => {
     assert.equal(blocksToHtml(blocks),
         '<p>Hi</p>\n<pre><code>a &lt; b &amp;&amp; c</code></pre>\n<ol><li>x</li><li>y</li></ol>\n'
         + '<figure><img src="p.png" alt="A &quot;q&quot;"><figcaption>Cap</figcaption></figure>')
+})
+
+const VIDEO = '<iframe width="560" height="315" src="https://www.youtube.com/embed/xwwNvoXX484" frameborder="0" allowfullscreen></iframe>'
+
+test('a YouTube iframe is a video block, other iframes stay HTML', () => {
+    const html = VIDEO.replace('allowfullscreen', 'allowfullscreen=""') + '\n<iframe src="https://example.com/x"></iframe>'
+    const blocks = toBlocks(html)
+    assert.equal(types(blocks), 'video html')
+    assert.equal(blocks[0].src, 'https://www.youtube.com/embed/xwwNvoXX484')
+    assert.equal(blocksToHtml(blocks), html)
+})
+
+test('an edited video block keeps its other attributes', () => {
+    const blocks = toBlocks('<iframe title="T" src="https://www.youtube.com/embed/xwwNvoXX484" allowfullscreen=""></iframe>')
+    markEdited(blocks)
+    blocks[0].src = 'https://www.youtube.com/embed/aaaaaaaaaaa'
+    assert.equal(blocksToHtml(blocks), '<iframe title="T" src="https://www.youtube.com/embed/aaaaaaaaaaa" allowfullscreen></iframe>')
+})
+
+test('a new video block writes the standard embed', () => {
+    assert.equal(blocksToHtml([newBlock('video'), newBlock('video', { src: 'https://www.youtube.com/embed/xwwNvoXX484' })]), VIDEO)
+})
+
+test('YouTube links become embed URLs', () => {
+    const embed = 'https://www.youtube.com/embed/xwwNvoXX484'
+    for (const link of ['https://www.youtube.com/watch?v=xwwNvoXX484', 'youtube.com/watch?feature=share&v=xwwNvoXX484',
+        'https://m.youtube.com/watch?v=xwwNvoXX484', 'https://youtu.be/xwwNvoXX484', 'https://www.youtube.com/shorts/xwwNvoXX484',
+        'https://www.youtube.com/live/xwwNvoXX484', embed, 'xwwNvoXX484']) {
+        assert.equal(youtubeEmbedUrl(link), embed, link)
+    }
+    assert.equal(youtubeEmbedUrl('https://youtu.be/xwwNvoXX484?t=90'), embed + '?start=90')
+    assert.equal(youtubeEmbedUrl('https://www.youtube.com/watch?v=xwwNvoXX484&t=1m5s'), embed + '?start=65')
+    assert.equal(youtubeEmbedUrl('https://www.youtube-nocookie.com/embed/xwwNvoXX484'), 'https://www.youtube-nocookie.com/embed/xwwNvoXX484')
+    for (const bad of ['', 'https://example.com/watch?v=xwwNvoXX484', 'https://www.youtube.com/watch?v=short', 'not a link']) {
+        assert.equal(youtubeEmbedUrl(bad), null, bad)
+    }
 })
