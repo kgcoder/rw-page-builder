@@ -14,15 +14,11 @@ https://github.com/kgcoder/readers-web-specs
 
 // CDOC and CONDOC XML sources, in the layout used by examples/cdoc.html and examples/condoc.html.
 import { escapeXml } from './escape.js'
+import { connectionsFromElement, connectionsToXml } from './connections.js'
 
 function connectionsXml(connections) {
-    if (!connections || !connections.length) return ''
-    const docs = connections.map(con => {
-        const titleAttr = con.title ? ` title="${escapeXml(con.title)}"` : ''
-        const flinks = (con.flinks || []).map(f => f + '\n').join('')
-        return `<doc url="${escapeXml(con.url)}"${titleAttr}>\n${flinks}</doc>\n`
-    }).join('')
-    return `<connections>\n${docs}</connections>\n\n`
+    const xml = connectionsToXml(connections)
+    return xml ? xml + '\n\n' : ''
 }
 
 function extraXml(sourceExtra) {
@@ -80,17 +76,8 @@ export function readSource(model, source, DOMParserImpl) {
         model.mainUrl = childText(root, 'main')
     }
 
-    model.connections = []
     const connectionsEl = Array.prototype.find.call(root.children, c => c.tagName === 'connections')
-    if (connectionsEl) {
-        for (const docEl of Array.prototype.filter.call(connectionsEl.children, c => c.tagName === 'doc')) {
-            model.connections.push({
-                url: docEl.getAttribute('url') || '',
-                title: docEl.getAttribute('title') || '',
-                flinks: docEl.textContent.split('\n').map(s => s.trim()).filter(Boolean),
-            })
-        }
-    }
+    model.connections = connectionsEl ? connectionsFromElement(connectionsEl) : []
 
     model.sourceExtra = []
     for (const child of root.children) {

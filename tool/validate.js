@@ -15,24 +15,17 @@ https://github.com/kgcoder/readers-web-specs
 
 // Problems shown above the form. Errors block saving (the page wouldn't work); warnings don't.
 import { PAGE_FORMAT, READER_FOLDER } from '../generator/version.js'
+import { isAbsoluteUrl } from '../generator/connections.js'
 
 // Mirrors the forbidden tags in sanitizeHtml (reader/helpers.js). The tool can't import that module
 // without bundling the whole reader, so keep this list in sync by hand.
 const REMOVED_BY_READER = ['script', 'object', 'embed', 'link', 'style', 'meta', 'form', 'base', 'head',
     'webview', 'button', 'input', 'textarea', 'select', 'option', 'optgroup', 'label', 'fieldset', 'legend', 'datalist']
 
-export function isAbsoluteUrl(url) {
-    if (!/^https?:\/\//i.test(url)) return false
-    try {
-        new URL(url)
-        return true
-    } catch (e) {
-        return false
-    }
-}
-
 // flinkResults: per connection, the anchorFlink() results from generator/flinks.js.
-export function validate(model, flinkResults) {
+// connectionsErrors: the problems in the connections XML being edited (tool/connections.js lists them
+// under the XML).
+export function validate(model, flinkResults, connectionsErrors) {
     const errors = []
     const warnings = []
 
@@ -57,13 +50,11 @@ export function validate(model, flinkResults) {
         if (!isAbsoluteUrl(model.mainUrl)) errors.push('Main document URL must be an absolute http(s) URL.')
     }
 
+    if (connectionsErrors && connectionsErrors.length) errors.push('The connections XML has problems: see Connections.')
     model.connections.forEach((con, i) => {
-        const name = 'Connection ' + (i + 1)
-        if (!isAbsoluteUrl(con.url)) errors.push(name + ': the URL must be an absolute http(s) URL.')
-        if (!con.flinks.length) warnings.push(name + ' has no flinks.')
         const broken = (flinkResults && flinkResults[i] || []).filter(r => r.status === 'broken').length
         if (broken) {
-            warnings.push(name + ': ' + (broken === 1 ? '1 flink no longer matches' : broken + ' flinks no longer match')
+            warnings.push((con.title || con.url) + ': ' + (broken === 1 ? '1 flink no longer matches' : broken + ' flinks no longer match')
                 + ' the content. Restore the text, remove the flink, or link it again in the RW Reader extension.')
         }
     })

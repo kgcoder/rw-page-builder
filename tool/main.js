@@ -16,7 +16,7 @@ https://github.com/kgcoder/readers-web-specs
 // The page builder: a form that generates static Reader's Web pages (see README.md).
 import { reanchorFlinks } from '../generator/flinks.js'
 import { createModel } from '../generator/model.js'
-import { showFlinkStatuses } from './connections.js'
+import { connectionsErrors, showFlinkStatuses } from './connections.js'
 import { copyHtml, openFile, openUrl, saveFile } from './files.js'
 import { renderForm } from './form.js'
 import { initPreview, schedulePreview, showPreview } from './preview.js'
@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
         showFlinkStatuses(flinkResults)
-        problems = validate(getModel(), flinkResults)
+        problems = validate(getModel(), flinkResults, connectionsErrors())
         renderMessages(problems, notice)
         $('save-button').disabled = $('copy-button').disabled = problems.errors.length > 0
         const name = getFileName()

@@ -52,7 +52,7 @@ export function renderForm(form, actions) {
         contentSection(model),
         h('fieldset', { class: 'section' },
             h('legend', null, 'Connections'),
-            h('p', { class: 'hint' }, 'Flinks are created in the RW Reader extension. Paste them here, one per line.'),
+            h('p', { class: 'hint' }, 'Export the connections in the RW Reader extension and paste the XML here. It replaces all connections of this document.'),
             renderConnections(model)),
         isHdoc ? postNavSection(model) : null,
         appearanceSection(model, actions),
