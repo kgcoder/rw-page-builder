@@ -3,3 +3,7 @@
 [functions.rw-proxy]
 # Pages call the proxy without keys; ALLOWED_URLS in the function limits what it fetches.
 verify_jwt = false
+
+[functions.rw-comments]
+# Pages call the bridge without keys; ALLOWED_FORUMS in the function limits what it serves.
+verify_jwt = false

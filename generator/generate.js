@@ -67,6 +67,7 @@ function scriptExtraAttrs(site) {
     let attrs = ''
     if (site.commentsLabel) attrs += ` data-comments-label="${escapeHtml(site.commentsLabel)}"`
     if (site.proxyUrl) attrs += ` data-proxy-url="${escapeHtml(site.proxyUrl)}"`
+    if (site.directOrigins && site.directOrigins.trim()) attrs += ` data-direct-origins="${escapeHtml(site.directOrigins.trim())}"`
     return attrs
 }
 

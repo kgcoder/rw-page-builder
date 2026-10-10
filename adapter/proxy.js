@@ -33,3 +33,28 @@ export function proxyRequestUrl(proxyUrl, targetUrl, sourceUrl, isForCondoc) {
     return base + separator + 'target_url=' + encodeURIComponent(targetUrl) + '&source_url=' + encodeURIComponent(source)
         + (isForCondoc ? '&is_for_condoc=1' : '')
 }
+
+// Origins the reader may fetch directly, without the proxy (data-direct-origins: separated by spaces
+// or commas). They must send CORS headers, like the comments bridge. Entries that aren't http(s)
+// URLs are ignored; paths are dropped ("https://x.example/fn" counts as "https://x.example").
+export function parseOrigins(value) {
+    const origins = []
+    String(value || '').split(/[\s,]+/).forEach(entry => {
+        if (!entry) return
+        try {
+            const url = new URL(entry)
+            if ((url.protocol === 'http:' || url.protocol === 'https:') && origins.indexOf(url.origin) === -1) origins.push(url.origin)
+        } catch (e) {
+            // not a URL
+        }
+    })
+    return origins
+}
+
+export function isDirectUrl(url, origins) {
+    try {
+        return origins.indexOf(new URL(url).origin) !== -1
+    } catch (e) {
+        return false
+    }
+}

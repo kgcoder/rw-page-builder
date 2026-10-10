@@ -17,7 +17,7 @@ import g from '../reader/Globals.js'
 import { getHdocJsonAndContentFromCurrentDocument, parseHtmlPageWithEmbeddedHDoc } from '../reader/parsers/EmbHDOCParser.js'
 import { parseStaticContent } from "../reader/parsers/ParsingManager.js"
 import { addListenersToContainer, dispatchReaderReady, loadUIAndIcons } from "../reader/readerStartUp.js"
-import { proxyRequestUrl } from './proxy.js'
+import { isDirectUrl, parseOrigins, proxyRequestUrl } from './proxy.js'
 
 
 // The page configures the reader through the <script> tag that loads the bundle:
@@ -33,6 +33,8 @@ function readConfig() {
         openInNewTabCommentsLabel: 'Open in a new tab to view comments',
         // The site's proxy for pages on other sites (see proxyRequestUrl). Empty: no proxy.
         proxyUrl: '',
+        // Origins fetched directly, without the proxy (they send CORS headers, e.g. the comments bridge).
+        directOrigins: [],
     }
 
     if (readerScript && readerScript.src) {
@@ -41,6 +43,7 @@ function readConfig() {
         if (data.fontSet) config.fontSet = data.fontSet
         if (data.commentsLabel) config.openInNewTabCommentsLabel = data.commentsLabel
         if (data.proxyUrl) config.proxyUrl = data.proxyUrl
+        if (data.directOrigins) config.directOrigins = parseOrigins(data.directOrigins)
     }
 
     // Same global the plugin uses; when present it overrides the script attributes.
@@ -49,6 +52,7 @@ function readConfig() {
         for (const key of Object.keys(config)) {
             if (overrides[key] != null) config[key] = overrides[key]
         }
+        if (!Array.isArray(config.directOrigins)) config.directOrigins = parseOrigins(config.directOrigins)
     }
 
     return config
@@ -157,10 +161,11 @@ export default class HostAdapter {
     mainDocumentInfoButtonId = "CurrentDocumentInfoButton-rw"
     currentDocumentCloseButtonId = "shouldn't-exist"
 
-    // Comments on another site are loaded only through the site's proxy or its own fetch code.
+    // Comments on another site are loaded only through the site's proxy, its own fetch code or a
+    // direct origin (the reader doesn't say which URL it asks about, so any of them unblocks comments).
     // A getter (not a field), so code that defines rwReaderFetch after the bundle still counts.
     get shouldBlockCrossOriginCommentsRequests() {
-        return !this.config.proxyUrl && !customFetch()
+        return !this.config.proxyUrl && !customFetch() && !this.config.directOrigins.length
     }
     isPromotionalButtonSupported = true
 
@@ -257,12 +262,23 @@ export default class HostAdapter {
     }
 
     // Only called for cross-origin URLs (NetworkManager fetches same-host URLs itself).
-    // A static site has no server of its own, so these go through, in this order:
+    // URLs on a direct origin (data-direct-origins) are fetched as they are. A static site has no
+    // server of its own, so other URLs go through, in this order:
     // - window.rwReaderFetch(url, options): the site's own code. Resolves to the page text,
     //   throws on failure, or resolves to null/undefined to leave the URL to the next step.
     // - the proxy URL (data-proxy-url): a GET, whose response body is the page text.
     // - neither: the popup suggesting the extension.
     async fetchWebPage(url, options) {
+        if (isDirectUrl(url, this.config.directOrigins)) {
+            try {
+                const response = await fetch(url)
+                if (!response.ok) return {text: '', error: new Error(response.status + ' for ' + url)}
+                return {text: await response.text(), error: ''}
+            } catch (e) {
+                return {text: '', error: e}
+            }
+        }
+
         const fetchFn = customFetch()
         if (fetchFn) {
             try {

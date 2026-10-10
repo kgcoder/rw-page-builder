@@ -14,7 +14,7 @@ https://github.com/kgcoder/readers-web-specs
 
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { proxyRequestUrl } from '../adapter/proxy.js'
+import { isDirectUrl, parseOrigins, proxyRequestUrl } from '../adapter/proxy.js'
 
 const target = 'https://other.example/doc.html?a=1&b=2'
 const source = 'https://my.example/page.html'
@@ -39,4 +39,20 @@ test('replaces {url} and {source} placeholders', () => {
     assert.equal(proxyRequestUrl('https://p.example/?u={url}&c={condoc}', target, source, true),
         'https://p.example/?u=' + encodeURIComponent(target) + '&c=1')
     assert.equal(proxyRequestUrl('https://p.example/?c={condoc}', target, source, false), 'https://p.example/?c=0')
+})
+
+test('parses direct origins', () => {
+    assert.deepEqual(parseOrigins('https://a.example/fn  https://b.example:8443, http://a.example https://a.example/x'),
+        ['https://a.example', 'https://b.example:8443', 'http://a.example'])
+    assert.deepEqual(parseOrigins('not-a-url javascript:alert(1) ftp://x.example'), [])
+    assert.deepEqual(parseOrigins(''), [])
+    assert.deepEqual(parseOrigins(undefined), [])
+})
+
+test('matches URLs on a direct origin', () => {
+    const origins = parseOrigins('https://bridge.example')
+    assert.ok(isDirectUrl('https://bridge.example/functions/v1/rw-comments?page=1', origins))
+    assert.ok(!isDirectUrl('https://bridge.example.evil.net/x', origins))
+    assert.ok(!isDirectUrl('http://bridge.example/x', origins))
+    assert.ok(!isDirectUrl('nonsense', origins))
 })

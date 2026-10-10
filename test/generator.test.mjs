@@ -105,3 +105,15 @@ test('writes the proxy URL on the reader script tag and reads it back', () => {
     model.site.proxyUrl = ''
     assert.ok(!generate(model).includes('data-proxy-url'))
 })
+
+test('writes the direct origins on the reader script tag and reads them back', () => {
+    const model = createModel('hdoc')
+    model.header.h1 = 'T'
+    model.site.directOrigins = 'https://bridge.example https://other.example'
+    const html = generate(model)
+    assert.ok(html.includes('data-direct-origins="https://bridge.example https://other.example"'))
+    assert.equal(parse(html, DOMParser).site.directOrigins, model.site.directOrigins)
+
+    model.site.directOrigins = '  '
+    assert.ok(!generate(model).includes('data-direct-origins'))
+})

@@ -139,7 +139,8 @@ Deno.serve(async (req) => {
         redirect: 'manual',
         signal: controller.signal,
         headers: {
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          // JSON too: comments on other sites are JSON.
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.9,*/*;q=0.8',
           'User-Agent': 'RW-Proxy/1.0',
         },
       })
@@ -158,13 +159,20 @@ Deno.serve(async (req) => {
     const body = upstream.body ? await readLimited(upstream.body) : new Uint8Array()
     if (!body) return errorResponse(req, 502, 'Response is too large')
 
+    // Documents are cached for a few minutes. JSON (comments) isn't: the reader reloads the comments
+    // after a visitor posts one, and the browser mustn't answer that from its cache. The upstream's
+    // own Cache-Control wins.
+    const contentType = upstream.headers.get('Content-Type') || 'text/plain; charset=utf-8'
+    const cacheControl = upstream.headers.get('Cache-Control')
+      || (/json/i.test(contentType) ? 'no-cache' : 'public, max-age=300')
+
     return new Response(body, {
       status: upstream.status,
       headers: {
         ...corsHeaders(req),
-        'Content-Type': upstream.headers.get('Content-Type') || 'text/plain; charset=utf-8',
+        'Content-Type': contentType,
         'X-RW-Final-Url': target.href,
-        'Cache-Control': 'public, max-age=300',
+        'Cache-Control': cacheControl,
       },
     })
   } catch (e) {

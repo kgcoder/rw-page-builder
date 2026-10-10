@@ -102,6 +102,7 @@ function readSiteSettings(site, doc) {
         site.fontSet = script.getAttribute('data-font-set') || 'default'
         site.commentsLabel = script.getAttribute('data-comments-label') || ''
         site.proxyUrl = script.getAttribute('data-proxy-url') || ''
+        site.directOrigins = script.getAttribute('data-direct-origins') || ''
         break
     }
 

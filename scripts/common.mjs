@@ -30,6 +30,9 @@ export const esbuildOptions = {
     entryPoints: [
         { in: 'adapter/startup.js', out: 'rw-reader/rw-reader' },
         { in: 'adapter/styles.css', out: 'rw-reader/rw-reader' },
+        // Comment form pages for comments services (opened in the reader's comment popup).
+        { in: 'adapter/comments/disqus.html', out: 'rw-reader/comments/disqus' },
+        { in: 'adapter/comments/hyvor.html', out: 'rw-reader/comments/hyvor' },
         // The page builder tool (dist/rw-tool/), optional for site owners.
         { in: 'tool/main.js', out: 'rw-tool/rw-tool' },
         { in: 'tool/tool.css', out: 'rw-tool/rw-tool' },

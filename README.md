@@ -51,6 +51,22 @@ There are two ways to set one up. Both are checked in this order:
 
 [proxy/supabase/functions/rw-proxy/index.ts](proxy/supabase/functions/rw-proxy/index.ts) is a proxy for Supabase Edge Functions (Deno). It only fetches the URLs listed in its `ALLOWED_URLS`, plus `ALLOWED_CONDOC_URLS` for CONDOC main pages. [proxy/supabase/config.toml](proxy/supabase/config.toml) turns off the key check, so pages can call it without keys. Deploy it from the `proxy/` folder with `npx supabase functions deploy rw-proxy --project-ref <project id>`, then use `https://<project id>.supabase.co/functions/v1/rw-proxy` as the proxy URL.
 
+### Comments
+
+A document's comments URL (`panels.comments.url` in `hdoc-data`, *Comments* in the page builder) must return Reader's Web comments JSON: `{"comments": […], "total": n, "page": n, "per_page": n}`, each comment with `id`, `parent` (`0` at the top level), `author_name`, `date`, `content.rendered` (HTML), and optionally `author_avatar_urls["48"]` and `reply-url`. The reader adds `page` and `order=asc` to the URL. The RW Publisher WordPress plugin serves this format; [examples/comments.json](examples/comments.json) is a static example.
+
+"Leave a comment" and "Reply" open their URL in a popup. When a comment is posted there, the page in the popup sends `window.parent.postMessage({type: 'swp-comment-submitted'}, '*')`, and the reader closes the popup and reloads the comments.
+
+> **Experimental.** The Disqus and Hyvor Talk integration (the comments bridge, the form pages in `rw-reader/comments/` and the page builder's comments services) hasn't been tested with the real services, and it may be removed completely in the future.
+
+**Comments services.** Disqus and Hyvor Talk don't serve this format, so a small server function, the **comments bridge** ([proxy/supabase/functions/rw-comments/index.ts](proxy/supabase/functions/rw-comments/index.ts)), loads a page's comments from the service and returns them as Reader's Web comments. The page's comments URL points at the bridge, so the comments also work for visitors with the RW Reader extension. To set it up:
+
+1. List your Disqus forum in `ALLOWED_FORUMS` (or your Hyvor Talk website ID in `ALLOWED_HYVOR_WEBSITES`), set the API key with `npx supabase secrets set DISQUS_API_KEY=…` (or `HYVOR_API_KEY`), and deploy it from the `proxy/` folder with `npx supabase functions deploy rw-comments --project-ref <project id>`.
+2. In the page builder's site settings, set the *Comments bridge URL* (`https://<project id>.supabase.co/functions/v1/rw-comments`), your Disqus short name or Hyvor Talk website ID, and add the bridge's origin to *Direct origins* (`data-direct-origins`): the reader loads URLs on those origins directly, without the proxy, so they must allow your site in CORS.
+3. In a document's *Comments* section, choose the service and give the page's thread identifier.
+
+Comments are posted on the service's own form page, `rw-reader/comments/disqus.html` or `hyvor.html`, which the popup opens. Add your site's domain to the forum's trusted domains in Disqus, or to the allowed domains in the Hyvor Talk console. The bridge caches each thread for a minute; when a comment is posted, the form page asks it to refresh that thread before the reader reloads the comments. Comments that wait for moderation appear once they're approved.
+
 ## Development
 
 ```sh
@@ -77,7 +93,8 @@ In dev mode the bundle is rebuilt in memory on each request, so edits in `adapte
 - **Connections.** Flinks are made in the RW Reader extension and pasted into a connection, one per line. When you edit an HDOC's content, its flinks follow the text they point at; a flink whose text was changed or removed is kept and marked "Not found".
 - **Opening pages.** Open an existing page from a file, a URL, or by dropping it on the window, edit it and save it again. The page is the source of truth: nothing is stored anywhere else.
 - **Preview.** The page is shown with the real reader as you type.
-- **Site settings** (toolbar: *Site settings*): the reader assets URL, theme, font set, default language, [proxy URL](#proxy), code added to every page's `<head>` (e.g. a Google Analytics snippet; it isn't run in the preview), and the top, sidebar and bottom panels. New documents use them, and so does every document that was made with them; a page with different settings keeps its own until you choose *Use site settings*. Previous/next links and comments are set per document.
+- **Comments.** A comments URL as is, or Disqus or Hyvor Talk through the [comments bridge](#comments): the tool then builds the comments and "Leave a comment" URLs from the service settings, and reads them back when you open the page. Disqus and Hyvor Talk are experimental: untested, and they may be removed.
+- **Site settings** (toolbar: *Site settings*): the reader assets URL, theme, font set, default language, [proxy URL](#proxy), [direct origins and comments service defaults](#comments), code added to every page's `<head>` (e.g. a Google Analytics snippet; it isn't run in the preview), and the top, sidebar and bottom panels. New documents use them, and so does every document that was made with them; a page with different settings keeps its own until you choose *Use site settings*. Previous/next links and comments are set per document.
 
 Site settings are saved in your browser. *Copy rw-site.json* copies them, ready to paste into a new `rw-site.json` file created in the `rw-tool/` folder on your site (e.g. with your host's file manager); *Export rw-site.json* downloads the same file. With `rw-site.json` there, the tool loads it automatically, so every browser starts with the same settings. If a browser already has different settings, they're kept, and the tool offers to use the file instead.
 

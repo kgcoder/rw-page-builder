@@ -48,6 +48,8 @@ export function createSiteSettings() {
         commentsLabel: '',
         // The site's proxy for connected documents and comments on other sites (data-proxy-url).
         proxyUrl: '',
+        // Origins the reader fetches directly, e.g. the comments bridge (data-direct-origins, separated by spaces).
+        directOrigins: '',
         // Code added to the page's <head> as is (e.g. an analytics snippet).
         headCode: '',
     }

@@ -15,7 +15,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // The site settings view (toolbar: "Site settings").
 import { h, setChildren } from './dom.js'
-import { FONT_SETS, THEMES, field, headCodeField, proxyUrlField, select, textInput } from './fields.js'
+import { FONT_SETS, THEMES, directOriginsField, field, headCodeField, proxyUrlField, select, textInput } from './fields.js'
 import { renderPanelsEditor } from './panelsEditor.js'
 import { SITE_FILE_NAME, copySiteJson, exportSite, getServerSite, getSite, importSite, siteEdited, useServerSite } from './siteSettings.js'
 
@@ -73,7 +73,19 @@ export function renderSiteForm(container, onStatus, onClose) {
                 field('Language of new documents', textInput(() => site.lang, v => { site.lang = v.trim() }, notify, { placeholder: 'en' })),
                 field('Comments label', textInput(() => site.commentsLabel, v => { site.commentsLabel = v }, notify,
                     { placeholder: 'Open in a new tab to view comments' }))),
-            proxyUrlField(() => site.proxyUrl, v => { site.proxyUrl = v }, notify)),
+            proxyUrlField(() => site.proxyUrl, v => { site.proxyUrl = v }, notify),
+            directOriginsField(() => site.directOrigins, v => { site.directOrigins = v }, notify)),
+        h('fieldset', { class: 'section' },
+            h('legend', null, 'Comments'),
+            h('p', { class: 'hint' }, 'Defaults for documents whose comments are on Disqus or Hyvor Talk (Comments section, Service).'),
+            field('Comments bridge URL', textInput(() => site.commentsBridgeUrl, v => { site.commentsBridgeUrl = v.trim() }, notify,
+                { type: 'url', placeholder: 'https://<project id>.supabase.co/functions/v1/rw-comments', spellcheck: 'false' })),
+            h('div', { class: 'row' },
+                field('Disqus short name', textInput(() => site.disqusShortname, v => { site.disqusShortname = v.trim() }, notify,
+                    { placeholder: 'my-site', spellcheck: 'false' })),
+                field('Hyvor Talk website ID', textInput(() => site.hyvorWebsiteId, v => { site.hyvorWebsiteId = v.trim() }, notify,
+                    { placeholder: '1234', spellcheck: 'false', inputmode: 'numeric' }))),
+            h('p', { class: 'hint' }, 'Add the bridge to the direct origins above, so pages load the comments from it directly.')),
         h('fieldset', { class: 'section' },
             h('legend', null, 'Page code'),
             headCodeField(() => site.headCode, v => { site.headCode = v }, notify)),

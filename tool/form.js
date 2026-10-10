@@ -19,12 +19,13 @@ import { createBlockEditor } from './blocks/editor.js'
 import { markdownToHtml } from './blocks/markdown.js'
 import { emptySvg } from './cdoc/collage.js'
 import { createCollageEditor } from './cdoc/editor.js'
+import { PROVIDERS, addOrigin, defaultFormPageUrl, hasOrigin, originOf, readService, serviceUrls } from './commentsService.js'
 import { renderConnections } from './connections.js'
 import { h } from './dom.js'
-import { FONT_SETS, THEMES, field, headCodeField, proxyUrlField, select as selectControl, textInput as textControl } from './fields.js'
+import { FONT_SETS, THEMES, directOriginsField, field, headCodeField, proxyUrlField, select as selectControl, textInput as textControl } from './fields.js'
 import { renderPanelsEditor } from './panelsEditor.js'
-import { applySiteToModel, getSite } from './siteSettings.js'
-import { changed, getModel } from './state.js'
+import { applySiteToModel, getSite, siteEdited } from './siteSettings.js'
+import { changed, getFileName, getModel } from './state.js'
 
 const TYPES = [
     { id: 'hdoc', label: 'HDOC', hint: 'Hypertext document' },
@@ -293,6 +294,7 @@ function appearanceSection(model, actions) {
         const summary = 'Theme ' + site.theme + ', font set ' + site.fontSet + ', reader at ' + site.assetsUrl
             + (model.type === 'hdoc' ? '; panels: ' + (panels.length ? panels.join(', ') : 'none') : '')
             + (site.proxyUrl ? '; proxy ' + site.proxyUrl : '')
+            + (site.directOrigins && site.directOrigins.trim() ? '; direct origins ' + site.directOrigins.trim() : '')
             + (site.headCode && site.headCode.trim() ? '; code added to <head>' : '') + '.'
         return h('fieldset', { class: 'section' }, legend,
             h('p', null, 'Uses the site settings. ', h('span', { class: 'hint' }, summary)),
@@ -322,6 +324,7 @@ function appearanceSection(model, actions) {
             field('Font set', select(FONT_SETS, () => site.fontSet, v => { site.fontSet = v }))),
         field('Comments label', textInput(() => site.commentsLabel, v => { site.commentsLabel = v }, { placeholder: 'Open in a new tab to view comments' })),
         proxyUrlField(() => site.proxyUrl || '', v => { site.proxyUrl = v }, () => changed()),
+        directOriginsField(() => site.directOrigins || '', v => { site.directOrigins = v }, () => changed()),
         headCodeField(() => site.headCode || '', v => { site.headCode = v }, () => changed()),
         model.type === 'hdoc' ? h('div', null,
             h('span', { class: 'field-label' }, 'Panels'),
@@ -329,7 +332,7 @@ function appearanceSection(model, actions) {
 }
 
 const COMMENT_FIELDS = [
-    ['url', 'Comments URL', 'The comments of this document (a WordPress REST API comments URL).'],
+    ['url', 'Comments URL', 'Returns this document\'s comments as Reader\'s Web comments JSON (e.g. the RW Publisher plugin\'s endpoint, or the comments bridge).'],
     ['title', 'Title', ''],
     ['empty', 'Message when there are no comments', ''],
     ['leave-comment-url', 'Leave a comment URL', 'Where readers write a comment.'],
@@ -337,6 +340,23 @@ const COMMENT_FIELDS = [
     ['reply-label', '"Reply" label', ''],
     ['load-more-label', '"Load more" label', ''],
 ]
+
+// Where the comments come from: a comments URL as is, or a service through the comments bridge
+// (tool/commentsService.js). The page stores only the URLs; model.commentsService and
+// model.commentsServiceSettings are tool-only (never written), so a half-filled service survives a rebuild.
+const COMMENT_SERVICES = [
+    { id: 'custom', label: 'Comments URL' },
+    { id: 'disqus', label: 'Disqus (through the comments bridge)' },
+    { id: 'hyvor', label: 'Hyvor Talk (through the comments bridge)' },
+]
+
+const COMMENT_LABEL_DEFAULTS = {
+    title: 'Comments',
+    empty: 'No comments yet',
+    'leave-comment-label': 'Leave a comment',
+    'reply-label': 'Reply',
+    'load-more-label': 'Load more comments',
+}
 
 function commentsSection(model) {
     const get = key => model.panels.comments ? model.panels.comments[key] || '' : ''
@@ -347,10 +367,110 @@ function commentsSection(model) {
         if (Object.keys(comments).length) model.panels.comments = comments
         else delete model.panels.comments
     }
+    if (!model.commentsService) {
+        const read = readService(get('url'))
+        model.commentsService = read ? read.provider : 'custom'
+    }
+    const service = model.commentsService
+
+    const serviceField = field('Service', selectControl(COMMENT_SERVICES, () => service, v => {
+        model.commentsService = v
+        if (v === 'custom') return
+        Object.keys(COMMENT_LABEL_DEFAULTS).forEach(key => { if (!get(key)) set(key, COMMENT_LABEL_DEFAULTS[key]) })
+        applyService(model, set)
+    }, () => changed(true)))
+
+    const fields = service === 'custom'
+        ? COMMENT_FIELDS.map(commentField)
+        : serviceFields(model, set).concat(COMMENT_FIELDS.filter(([key]) => key.indexOf('url') === -1).map(commentField))
+
+    function commentField([key, label, hint]) {
+        return field(label,
+            textInput(() => get(key), v => set(key, key.indexOf('url') !== -1 ? v.trim() : v), key.indexOf('url') !== -1 ? { type: 'url' } : null),
+            hint || null)
+    }
+
     return h('details', { class: 'section details', open: !!model.panels.comments },
         h('summary', null, 'Comments'),
         h('p', { class: 'hint' }, 'Shown below the document when it has a comments URL.'),
-        COMMENT_FIELDS.map(([key, label, hint]) => field(label,
-            textInput(() => get(key), v => set(key, key.indexOf('url') !== -1 ? v.trim() : v), key.indexOf('url') !== -1 ? { type: 'url' } : null),
-            hint || null)))
+        serviceField,
+        fields)
+}
+
+// The settings of the chosen service (model.commentsService): read from the page's comments URL,
+// or defaults from the site settings. Switching services keeps the bridge URL and identifier.
+function serviceSettings(model) {
+    const provider = model.commentsService
+    const current = model.commentsServiceSettings
+    if (current && current.provider === provider) return current
+
+    const site = getSite()
+    const read = readService((model.panels.comments || {}).url || '')
+    const settings = read && read.provider === provider ? read : {
+        provider,
+        bridgeUrl: (current && current.bridgeUrl) || (read && read.bridgeUrl) || site.commentsBridgeUrl || '',
+        account: (provider === 'disqus' ? site.disqusShortname : site.hyvorWebsiteId) || '',
+        ident: (current && current.ident) || (read && read.ident) || getFileName().replace(/\.html?$/i, ''),
+        formPageUrl: defaultFormPageUrl(provider, model.site.assetsUrl, location.href),
+        title: model.header.h1 || model.pageTitle || '',
+    }
+    model.commentsServiceSettings = settings
+    return settings
+}
+
+// Writes the comments URL and "Leave a comment" URL from the service settings (removes them while a
+// setting is missing). Returns whether they're complete.
+function applyService(model, set) {
+    const urls = serviceUrls(serviceSettings(model))
+    set('url', urls ? urls.url : '')
+    set('leave-comment-url', urls ? urls.leaveCommentUrl : '')
+    return !!urls
+}
+
+function serviceFields(model, set) {
+    const settings = serviceSettings(model)
+    const isDisqus = settings.provider === 'disqus'
+    const status = h('p', { class: 'hint' })
+    const addOriginButton = h('button', {
+        type: 'button', class: 'small',
+        onClick: () => {
+            const origin = originOf(settings.bridgeUrl)
+            if (model.useSite) {
+                const site = getSite()
+                site.directOrigins = addOrigin(site.directOrigins, origin)
+                siteEdited()
+            } else {
+                model.site.directOrigins = addOrigin(model.site.directOrigins, origin)
+                changed(true)
+            }
+        },
+    }, 'Add the bridge to the direct origins')
+    const update = () => {
+        const complete = applyService(model, set)
+        const origin = originOf(settings.bridgeUrl)
+        const missingOrigin = origin && !hasOrigin(model.site.directOrigins, origin)
+        status.textContent = !complete ? 'Fill in every setting above to show the comments.'
+            : missingOrigin ? 'The bridge (' + origin + ') isn\'t in the direct origins, so visitors without the extension can\'t load these comments.'
+            : ''
+        addOriginButton.hidden = !(complete && missingOrigin)
+    }
+    const input = (key, props) => textControl(() => settings[key] || '', v => { settings[key] = v.trim() }, () => { update(); changed() }, props)
+
+    const fields = [
+        h('div', { class: 'row' },
+            isDisqus
+                ? field('Disqus short name', input('account', { placeholder: 'my-site', spellcheck: 'false' }), 'Your forum\'s short name in the Disqus admin.')
+                : field('Hyvor Talk website ID', input('account', { placeholder: '1234', spellcheck: 'false', inputmode: 'numeric' }), 'In the Hyvor Talk console.'),
+            field(isDisqus ? 'Thread identifier' : 'Page identifier', input('ident', { placeholder: 'posts/my-post', spellcheck: 'false' }),
+                'Unique to this page. If the page already had comments on this service, use its old identifier.')),
+        isDisqus ? field('Thread title', input('title'), 'The title Disqus shows for this page\'s thread.') : null,
+        field('Comments bridge URL', input('bridgeUrl', { type: 'url', placeholder: 'https://<project id>.supabase.co/functions/v1/rw-comments', spellcheck: 'false' }),
+            'Loads the comments from the service and returns them in the Reader\'s Web format (proxy/supabase/functions/rw-comments in this project).'),
+        field('Comment form page', input('formPageUrl', { type: 'url', spellcheck: 'false' }),
+            'rw-reader/' + PROVIDERS[settings.provider].formPath + ' on your site. '
+            + (isDisqus ? 'Its domain must be a trusted domain of the forum in Disqus.' : 'Its domain must be allowed in the Hyvor Talk console.')),
+        h('div', { class: 'inline-buttons' }, status, addOriginButton),
+    ]
+    update()
+    return fields
 }

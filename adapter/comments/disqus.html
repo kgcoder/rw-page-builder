@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<!--
+RW Page Builder
+
+Copyright (c) 2026 Karen Grigorian
+Code licensed under the MIT License.
+
+The comment form for pages whose comments are on Disqus. The reader opens it in its comment popup
+("Leave a comment" and "Reply"): rw-reader/comments/disqus.html?shortname=<forum>&ident=<thread
+identifier>&url=<page URL>&title=<page title>&bridge=<comments bridge URL>, with #comment-<id> to reply
+to a comment. When a
+comment is posted, it tells the reader (swp-comment-submitted), which closes the popup and reloads
+the comments. The site's domain must be one of the forum's trusted domains in the Disqus admin.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave a comment</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { margin: 0; padding: 16px; font: 16px/1.5 system-ui, sans-serif; background: #fff; color: #222; }
+        @media (prefers-color-scheme: dark) {
+            body { background: #1e1e1e; color: #ddd; }
+        }
+        .notice { margin: 0 0 16px; padding: 10px 12px; border-radius: 6px; background: rgba(127, 127, 127, 0.15); }
+        [hidden] { display: none; }
+    </style>
+</head>
+<body>
+    <p id="posted" class="notice" hidden>Thanks, your comment was posted. If the site reviews comments first, it appears once it's approved.</p>
+    <p id="error" class="notice" hidden></p>
+    <div id="disqus_thread"></div>
+    <script>
+    (function () {
+        var params = new URLSearchParams(location.search)
+        var shortname = params.get('shortname') || ''
+        var ident = params.get('ident') || ''
+        var pageUrl = params.get('url') || ''
+        var title = params.get('title') || ''
+
+        function showError(text) {
+            var error = document.getElementById('error')
+            error.textContent = text
+            error.hidden = false
+        }
+
+        // Asks the bridge to drop its cached copy of the thread (it caches each thread for a minute),
+        // so the reader's reload shows the new comment. Resolves either way, within a few seconds.
+        function refreshBridge(params) {
+            var bridge
+            try {
+                bridge = new URL(new URLSearchParams(location.search).get('bridge') || '')
+            } catch (e) {
+                return Promise.resolve()
+            }
+            if (bridge.protocol !== 'https:' && bridge.protocol !== 'http:') return Promise.resolve()
+            Object.keys(params).forEach(function (name) { bridge.searchParams.set(name, params[name]) })
+            bridge.searchParams.set('refresh', '1')
+            var timeout = new Promise(function (resolve) { setTimeout(resolve, 5000) })
+            return Promise.race([fetch(bridge.href).catch(function () {}), timeout])
+        }
+
+        // Shows that it worked, refreshes the bridge, and tells the reader (which closes the popup and
+        // reloads the comments), leaving the visitor at least two seconds to see the message.
+        function commentPosted(params) {
+            document.getElementById('posted').hidden = false
+            var shown = new Promise(function (resolve) { setTimeout(resolve, 2000) })
+            Promise.all([shown, refreshBridge(params)]).then(function () {
+                if (window.parent !== window) window.parent.postMessage({ type: 'swp-comment-submitted' }, '*')
+            })
+        }
+
+        if (!/^[a-z0-9-]+$/.test(shortname)) {
+            showError('This comment form is missing its Disqus short name.')
+            return
+        }
+        if (!/^https?:\/\//.test(pageUrl)) pageUrl = ''
+        if (!ident && !pageUrl) {
+            showError('This comment form is missing the page it belongs to.')
+            return
+        }
+
+        // Read by embed.js.
+        window.disqus_config = function () {
+            if (pageUrl) this.page.url = pageUrl
+            if (ident) this.page.identifier = ident
+            if (title) this.page.title = title
+            this.callbacks.onNewComment = [function () {
+                commentPosted({ provider: 'disqus', forum: shortname, ident: ident })
+            }]
+        }
+
+        var script = document.createElement('script')
+        script.src = 'https://' + shortname + '.disqus.com/embed.js'
+        script.setAttribute('data-timestamp', String(Date.now()))
+        script.onerror = function () { showError("Couldn't load Disqus.") }
+        document.head.appendChild(script)
+    })()
+    </script>
+</body>
+</html>

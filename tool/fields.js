@@ -54,6 +54,14 @@ export function proxyUrlField(get, set, notify) {
         + 'Code added to <head> can define window.rwReaderFetch for any other kind of request (not run in the preview).')
 }
 
+// Origins the reader fetches without the proxy (data-direct-origins), e.g. the comments bridge.
+export function directOriginsField(get, set, notify) {
+    return field('Direct origins',
+        textInput(get, set, notify, { placeholder: 'https://xyz.supabase.co', spellcheck: 'false' }),
+        'Sites the reader loads from directly, without the proxy, separated by spaces. They must allow '
+        + 'cross-origin requests (CORS), like the comments bridge. Choosing a comments service adds its bridge here.')
+}
+
 // options: [{id, label}]. A current value that isn't in the list (e.g. from a page made with another
 // reader version) is kept as an extra option.
 export function select(options, get, set, notify) {

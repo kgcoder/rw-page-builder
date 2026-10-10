@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<!--
+RW Page Builder
+
+Copyright (c) 2026 Karen Grigorian
+Code licensed under the MIT License.
+
+The comment form for pages whose comments are on Hyvor Talk. The reader opens it in its comment
+popup ("Leave a comment" and "Reply"): rw-reader/comments/hyvor.html?website-id=<website ID>&page-id=<page
+identifier>&bridge=<comments bridge URL>. When a comment is published, it tells the reader (swp-comment-submitted), which closes
+the popup and reloads the comments. The site's domain must be allowed in the Hyvor Talk console.
+-->
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leave a comment</title>
+    <style>
+        :root { color-scheme: light dark; }
+        body { margin: 0; padding: 16px; font: 16px/1.5 system-ui, sans-serif; background: #fff; color: #222; }
+        @media (prefers-color-scheme: dark) {
+            body { background: #1e1e1e; color: #ddd; }
+        }
+        .notice { margin: 0 0 16px; padding: 10px 12px; border-radius: 6px; background: rgba(127, 127, 127, 0.15); }
+        [hidden] { display: none; }
+    </style>
+</head>
+<body>
+    <p id="posted" class="notice" hidden>Thanks, your comment was posted. If the site reviews comments first, it appears once it's approved.</p>
+    <p id="error" class="notice" hidden></p>
+    <div id="comments"></div>
+    <script>
+    (function () {
+        var params = new URLSearchParams(location.search)
+        var websiteId = params.get('website-id') || ''
+        var pageId = params.get('page-id') || ''
+
+        function showError(text) {
+            var error = document.getElementById('error')
+            error.textContent = text
+            error.hidden = false
+        }
+
+        // Asks the bridge to drop its cached copy of the thread (it caches each thread for a minute),
+        // so the reader's reload shows the new comment. Resolves either way, within a few seconds.
+        function refreshBridge(params) {
+            var bridge
+            try {
+                bridge = new URL(new URLSearchParams(location.search).get('bridge') || '')
+            } catch (e) {
+                return Promise.resolve()
+            }
+            if (bridge.protocol !== 'https:' && bridge.protocol !== 'http:') return Promise.resolve()
+            Object.keys(params).forEach(function (name) { bridge.searchParams.set(name, params[name]) })
+            bridge.searchParams.set('refresh', '1')
+            var timeout = new Promise(function (resolve) { setTimeout(resolve, 5000) })
+            return Promise.race([fetch(bridge.href).catch(function () {}), timeout])
+        }
+
+        // Shows that it worked, refreshes the bridge, and tells the reader (which closes the popup and
+        // reloads the comments), leaving the visitor at least two seconds to see the message.
+        function commentPosted(params) {
+            document.getElementById('posted').hidden = false
+            var shown = new Promise(function (resolve) { setTimeout(resolve, 2000) })
+            Promise.all([shown, refreshBridge(params)]).then(function () {
+                if (window.parent !== window) window.parent.postMessage({ type: 'swp-comment-submitted' }, '*')
+            })
+        }
+
+        if (!/^\d+$/.test(websiteId) || !pageId) {
+            showError('This comment form is missing its Hyvor Talk website ID or page identifier.')
+            return
+        }
+
+        var comments = document.createElement('hyvor-talk-comments')
+        comments.setAttribute('website-id', websiteId)
+        comments.setAttribute('page-id', pageId)
+        comments.addEventListener('comment:published', function () {
+            commentPosted({ provider: 'hyvor', website: websiteId, ident: pageId })
+        })
+        document.getElementById('comments').appendChild(comments)
+
+        var script = document.createElement('script')
+        script.type = 'module'
+        script.src = 'https://talk.hyvor.com/embed/embed.js'
+        script.onerror = function () { showError("Couldn't load Hyvor Talk.") }
+        document.head.appendChild(script)
+    })()
+    </script>
+</body>
+</html>
