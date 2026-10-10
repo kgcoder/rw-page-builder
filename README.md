@@ -4,13 +4,14 @@ Build and publish [Reader's Web](https://github.com/kgcoder/readers-web-specs) d
 
 ## Publishing
 
-1. Build (or download) the `rw-reader/` folder and upload it to your site once, e.g. as `https://example.com/rw-reader/`.
+1. Build (or download) the `rw-reader-1/` folder and upload it to your site once, e.g. as `https://example.com/rw-reader-1/`. The number is the reader's major version; see [Versions](#versions).
 2. For each document, upload an HTML page that points at that folder. The [page builder](#page-builder) makes these pages; you can also write them by hand, like the ones in [examples/](examples/):
 
 ```html
-<link rel="stylesheet" href="/rw-reader/rw-reader.css">
-<link rel="stylesheet" href="/rw-reader/themes/light.css">   <!-- any file from rw-reader/themes/ -->
-<script defer src="/rw-reader/rw-reader.js" data-font-set="default"></script>
+<meta name="rw-page-format" content="1">   <!-- the major version the page was made for -->
+<link rel="stylesheet" href="/rw-reader-1/rw-reader.css">
+<link rel="stylesheet" href="/rw-reader-1/themes/light.css">   <!-- any file from rw-reader-1/themes/ -->
+<script defer src="/rw-reader-1/rw-reader.js" data-font-set="default"></script>
 …
 <div id="ui-root" class="theme-light">   <!-- must match the theme file -->
 ```
@@ -57,7 +58,7 @@ A document's comments URL (`panels.comments.url` in `hdoc-data`, *Comments* in t
 
 "Leave a comment" and "Reply" open their URL in a popup. When a comment is posted there, the page in the popup sends `window.parent.postMessage({type: 'swp-comment-submitted'}, '*')`, and the reader closes the popup and reloads the comments.
 
-> **Experimental.** The Disqus and Hyvor Talk integration (the comments bridge, the form pages in `rw-reader/comments/` and the page builder's comments services) hasn't been tested with the real services, and it may be removed completely in the future.
+> **Experimental.** The Disqus and Hyvor Talk integration (the comments bridge, the form pages in `rw-reader-1/comments/` and the page builder's comments services) hasn't been tested with the real services, and it may be removed completely in the future.
 
 **Comments services.** Disqus and Hyvor Talk don't serve this format, so a small server function, the **comments bridge** ([proxy/supabase/functions/rw-comments/index.ts](proxy/supabase/functions/rw-comments/index.ts)), loads a page's comments from the service and returns them as Reader's Web comments. The page's comments URL points at the bridge, so the comments also work for visitors with the RW Reader extension. To set it up:
 
@@ -65,7 +66,20 @@ A document's comments URL (`panels.comments.url` in `hdoc-data`, *Comments* in t
 2. In the page builder's site settings, set the *Comments bridge URL* (`https://<project id>.supabase.co/functions/v1/rw-comments`), your Disqus short name or Hyvor Talk website ID, and add the bridge's origin to *Direct origins* (`data-direct-origins`): the reader loads URLs on those origins directly, without the proxy, so they must allow your site in CORS.
 3. In a document's *Comments* section, choose the service and give the page's thread identifier.
 
-Comments are posted on the service's own form page, `rw-reader/comments/disqus.html` or `hyvor.html`, which the popup opens. Add your site's domain to the forum's trusted domains in Disqus, or to the allowed domains in the Hyvor Talk console. The bridge caches each thread for a minute; when a comment is posted, the form page asks it to refresh that thread before the reader reloads the comments. Comments that wait for moderation appear once they're approved.
+Comments are posted on the service's own form page, `rw-reader-1/comments/disqus.html` or `hyvor.html`, which the popup opens. Add your site's domain to the forum's trusted domains in Disqus, or to the allowed domains in the Hyvor Talk console. The bridge caches each thread for a minute; when a comment is posted, the form page asks it to refresh that thread before the reader reloads the comments. Comments that wait for moderation appear once they're approved.
+
+## Versions
+
+Releases use [semantic versioning](https://semver.org/), and the major version is the **page format**: the version of the HTML that pages contain.
+
+- **Minor and patch releases** work with existing pages. Replace the contents of your `rw-reader-1/` folder with the new one.
+- **Major releases** need pages in the new format, so they come in a new folder (`rw-reader-2/`). Upload it next to the old one, which keeps the old pages working, then open each page in the page builder, set the reader assets URL to the new folder, and save it. Remove the old folder when no page uses it.
+
+Each page says which format it's in (`<meta name="rw-page-format">`) and which version of the page builder made it (`<meta name="generator">`). The page builder warns when it opens a page in an older format. `rw-reader-1/VERSION`, and the first line of `rw-reader.js` and `rw-reader.css`, give the reader's version.
+
+Browsers may keep using a cached `rw-reader.js` for a while after you replace it. If your host lets you, give the reader folder a short cache time.
+
+The version is set in [generator/version.js](generator/version.js) and must match `package.json`.
 
 ## Development
 
@@ -74,7 +88,7 @@ git submodule update --init
 npm install
 npm run dev        # http://localhost:8000/examples/hdoc.html (also cdoc.html, condoc.html)
                    # page builder: http://localhost:8000/dist/rw-tool/index.html
-npm run build      # minified dist/rw-reader/ and dist/rw-tool/
+npm run build      # minified dist/rw-reader-1/ and dist/rw-tool/
 npm test           # generator tests
 npm run preview    # build + serve the production files on :8000
 ```
@@ -83,7 +97,7 @@ In dev mode the bundle is rebuilt in memory on each request, so edits in `adapte
 
 ## Page builder
 
-`rw-tool/` is a client-side page that makes these HTML files. Open `rw-tool/index.html` from a local build, or upload the folder next to `rw-reader/` on your site (the preview uses the `rw-reader/` folder next to it).
+`rw-tool/` is a client-side page that makes these HTML files. Open `rw-tool/index.html` from a local build, or upload the folder next to `rw-reader-1/` on your site (the preview uses the `rw-reader-1/` folder next to it).
 
 - **Documents.** Choose HDOC, CDOC or CONDOC, fill in the title and the other fields, and save the `.html` file (or copy its HTML). Saving is disabled while there are errors, such as a missing title or a connection URL that isn't absolute.
 - **HDOC content** is edited as blocks (paragraphs, headings, lists, quotes, images, YouTube videos, code, separators) or as HTML; both tabs edit the same content. Markup that can't be shown as blocks is kept as an HTML block, unchanged. Select text to format it or add a link (⌘K). A video block takes any YouTube link (watch, youtu.be, Shorts) and writes the standard embed `<iframe>`.

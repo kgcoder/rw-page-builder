@@ -14,6 +14,7 @@ https://github.com/kgcoder/readers-web-specs
 
 
 // The site settings view (toolbar: "Site settings").
+import { READER_FOLDER } from '../generator/version.js'
 import { h, setChildren } from './dom.js'
 import { FONT_SETS, THEMES, directOriginsField, field, headCodeField, proxyUrlField, select, textInput } from './fields.js'
 import { renderPanelsEditor } from './panelsEditor.js'
@@ -64,8 +65,8 @@ export function renderSiteForm(container, onStatus, onClose) {
         serverNotice,
         h('fieldset', { class: 'section' },
             h('legend', null, 'Reader'),
-            field('Reader assets URL', textInput(() => site.assetsUrl, v => { site.assetsUrl = v.trim() }, notify, { placeholder: '/rw-reader/' }),
-                'Where the rw-reader/ folder is on your site.'),
+            field('Reader assets URL', textInput(() => site.assetsUrl, v => { site.assetsUrl = v.trim() }, notify, { placeholder: '/' + READER_FOLDER + '/' }),
+                'Where the ' + READER_FOLDER + '/ folder is on your site.'),
             h('div', { class: 'row' },
                 field('Theme', select(THEMES, () => site.theme, v => { site.theme = v }, notify)),
                 field('Font set', select(FONT_SETS, () => site.fontSet, v => { site.fontSet = v }, notify))),

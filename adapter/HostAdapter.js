@@ -21,7 +21,7 @@ import { isDirectUrl, parseOrigins, proxyRequestUrl } from './proxy.js'
 
 
 // The page configures the reader through the <script> tag that loads the bundle:
-//   <script defer src="/rw-reader/rw-reader.js" data-font-set="default"></script>
+//   <script defer src="/rw-reader-1/rw-reader.js" data-font-set="default"></script>
 // document.currentScript is only available while that script is executing, so it
 // has to be read at module evaluation time, not in a callback.
 const readerScript = document.currentScript

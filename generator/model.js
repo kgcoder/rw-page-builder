@@ -18,6 +18,10 @@ https://github.com/kgcoder/readers-web-specs
 // bottom), so it round-trips without conversion. Panels exist only for HDOC.
 // extra keeps hdoc-data keys the tool doesn't know (e.g. "removal-selectors"), and sourceExtra keeps
 // unknown top-level CDOC/CONDOC elements (e.g. <copy-info>) as raw XML, so re-saving loses nothing.
+// pageFormat is the format the page was opened in (its rw-page-format meta); generate() always writes
+// the current PAGE_FORMAT.
+
+import { PAGE_FORMAT, READER_FOLDER } from './version.js'
 
 export const DOC_TYPES = ['hdoc', 'cdoc', 'condoc']
 
@@ -37,12 +41,13 @@ export function createModel(type) {
         site: createSiteSettings(),
         extra: {},
         sourceExtra: [],
+        pageFormat: PAGE_FORMAT,
     }
 }
 
 export function createSiteSettings() {
     return {
-        assetsUrl: '/rw-reader/',
+        assetsUrl: '/' + READER_FOLDER + '/',
         theme: 'light',
         fontSet: 'default',
         commentsLabel: '',

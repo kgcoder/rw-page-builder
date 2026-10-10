@@ -17,6 +17,7 @@ import { escapeHtml, escapeJsonForScript } from './escape.js'
 import { bottomPanel, postNavHtml, sidebarHtml, topPanel } from './panels.js'
 import { buildCdocSource, buildCondocSource } from './sources.js'
 import { pageHtml } from './template.js'
+import { PAGE_FORMAT, VERSION } from './version.js'
 
 const NO_PANELS = {}
 
@@ -46,6 +47,8 @@ export function generate(model) {
     return pageHtml({
         lang: escapeHtml(model.lang || 'en'),
         pageTitle: escapeHtml(model.pageTitle || model.header.h1),
+        version: VERSION,
+        pageFormat: PAGE_FORMAT,
         assetsUrl: escapeHtml(assetsUrl),
         theme: escapeHtml(site.theme || 'light'),
         fontSet: escapeHtml(site.fontSet || 'default'),

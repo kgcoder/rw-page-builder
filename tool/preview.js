@@ -15,6 +15,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // Live preview: the generated page, written into preview.html in an iframe and run by the real reader.
 import { generate } from '../generator/generate.js'
+import { READER_FOLDER } from '../generator/version.js'
 import { clear, h } from './dom.js'
 
 let holder
@@ -39,10 +40,10 @@ export function showPreview(model, problems) {
         return
     }
 
-    // The preview always uses the reader next to this tool (dist/rw-reader/), whatever URL the page
+    // The preview always uses the reader next to this tool (dist/rw-reader-N/), whatever URL the page
     // will use on the site. The site's head code (analytics etc.) isn't run here.
     const previewModel = Object.assign({}, model, {
-        site: Object.assign({}, model.site, { assetsUrl: new URL('../rw-reader/', location.href).href, headCode: '' }),
+        site: Object.assign({}, model.site, { assetsUrl: new URL('../' + READER_FOLDER + '/', location.href).href, headCode: '' }),
     })
     const html = generate(previewModel)
 

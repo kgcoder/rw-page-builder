@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-**RW Page Builder** (formerly "RW Reader in HTML", repo `kgcoder/rw-page-builder`) lets anyone publish **Reader's Web** documents (HDOC, CDOC, CONDOC) as plain static `.html` files that show the full Reader UI even when the visitor doesn't have the RW Reader extension. It is the static equivalent of the WordPress plugin's `doc_in_reader` display mode (plugin: Reader's Web Publisher, `static-web-publisher`).
+**RW Page Builder** (repo `kgcoder/rw-page-builder`) lets anyone publish **Reader's Web** documents (HDOC, CDOC, CONDOC) as plain static `.html` files that show the full Reader UI even when the visitor doesn't have the RW Reader extension. It is the static equivalent of the WordPress plugin's `doc_in_reader` display mode (plugin: Reader's Web Publisher, `static-web-publisher`).
 
-A site owner uploads the `dist/rw-reader/` folder once (bundled JS, CSS, themes, images), then uploads one HTML file per document. The page builder (`tool/`, built into `dist/rw-tool/`) generates those files; see "Page builder" in README.md.
+A site owner uploads the `dist/rw-reader-1/` folder once (bundled JS, CSS, themes, images), then uploads one HTML file per document. The page builder (`tool/`, built into `dist/rw-tool/`) generates those files; see "Page builder" in README.md.
 
 The **RW Reader** Chrome extension is the primary Reader's Web client. When the user mentions "the extension", they mean this extension. The "plugin" is the WordPress plugin, the reference implementation this project was derived from.
 
@@ -15,7 +15,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 | [reader/](reader/) | Git submodule [kgcoder/rw-reader-ui](https://github.com/kgcoder/rw-reader-ui), shared with the extension and the plugin. Its own rules: [reader/CLAUDE.md](reader/CLAUDE.md), interface: [reader/docs/host-adapter.md](reader/docs/host-adapter.md). |
 | [adapter/startup.js](adapter/startup.js) | Bundle entry: sets `g.hostAdapter`, imports `reader/readerStartUp.js`. |
 | [adapter/HostAdapter.js](adapter/HostAdapter.js) | This host's `g.hostAdapter`. Reads its config from the `<script>` tag (`data-font-set`, `data-comments-label`, `data-proxy-url`, `data-direct-origins`; `assetsUrl` = `images/` next to the script). `window.vcReaderData` overrides it. [adapter/proxy.js](adapter/proxy.js) (pure, tested) builds the proxy request URL and matches direct origins. |
-| [adapter/comments/](adapter/comments/) | Comment form pages for comments services (`disqus.html`, `hyvor.html`), copied to `dist/rw-reader/comments/`. They embed the service's widget and send `swp-comment-submitted` to the reader when a comment is posted. |
+| [adapter/comments/](adapter/comments/) | Comment form pages for comments services (`disqus.html`, `hyvor.html`), copied to `dist/rw-reader-N/comments/`. They embed the service's widget and send `swp-comment-submitted` to the reader when a comment is posted. |
 | [adapter/styles.css](adapter/styles.css) | CSS bundle entry (reader CSS + [adapter/reader.css](adapter/reader.css) host overrides). Themes are linked separately per page. |
 | [examples/](examples/) | Hand-written HDOC, CDOC and CONDOC pages, connected to each other. The DOM is copied from the plugin's `templates/reader-template.php`. |
 | [generator/](generator/) | Pure modules shared by the tool and a later CLI: `generate(model)` → page HTML, `parse(html, DOMParser)` → model. The page skeleton is [generator/template.js](generator/template.js); keep it in sync with `examples/`. |
@@ -25,8 +25,9 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 | [generator/flinks.js](generator/flinks.js) | Re-anchors an HDOC's own flinks (left ends) after its content changes, using the reader's own algorithm from `reader/textAnchors.js`. `hdocText()` must compute the text exactly as the reader does (see `parseHtmlPageWithEmbeddedHDoc`); the example's flinks are the test for that. |
 | [test/](test/) | `npm test` (node:test + jsdom; the reader helpers need a spec-compliant HTML parser). The example pages are the generator's round-trip fixtures. |
 | [scripts/](scripts/) | `common.mjs` (shared esbuild options + asset copy), `build.mjs`, `dev.mjs`. |
-| `dist/rw-reader/` | Build output (gitignored). This folder is what users upload. |
-| `dist/rw-tool/` | Build output: the page builder. Must sit next to `rw-reader/`, which its preview uses. |
+| [generator/version.js](generator/version.js) | `VERSION` (must equal `package.json`'s, tested), `PAGE_FORMAT` (= the major) and `READER_FOLDER` (`rw-reader-<major>`). Used by the build, the generator and the tool; never hard-code `rw-reader-1`. |
+| `dist/rw-reader-<major>/` | Build output (gitignored). This folder is what users upload. |
+| `dist/rw-tool/` | Build output: the page builder. Must sit next to `rw-reader-<major>/`, which its preview uses. |
 
 ## Key Rules
 
@@ -40,11 +41,12 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 - `fetchWebPage` (cross-origin requests only) uses the site's `window.rwReaderFetch` if it's defined, then the proxy URL (`data-proxy-url`). If neither is set, or the proxy answers 403, it shows a popup (`showCrossOriginPopup` in the adapter) linking to the extension in the Chrome Web Store. `shouldBlockCrossOriginCommentsRequests` is a getter, `false` when either is set. Same-host connections are fetched directly by `reader/NetworkManager.js`. URLs on a direct origin (`data-direct-origins`, e.g. the comments bridge) are fetched directly, before all of that. [proxy/supabase/functions/rw-proxy/](proxy/supabase/functions/rw-proxy/) is an example proxy (Supabase Edge Function), not part of the build.
 - Comments services (Disqus, Hyvor Talk) go through the comments bridge, [proxy/supabase/functions/rw-comments/](proxy/supabase/functions/rw-comments/), which returns Reader's Web comments JSON (`content.rendered`, as the reader and the plugin use it), so the comments URL works in every reader. Its converters are plain JS in `proxy/supabase/functions/_shared/comments/` (pure, tested by `npm test`). The tool builds the bridge and form page URLs in [tool/commentsService.js](tool/commentsService.js) (pure, tested) and reads them back from the page; `model.commentsService` and `model.commentsServiceSettings` are tool-only.
 - Connection URLs and CONDOC `<main>` URLs must be **absolute**. The reader does `new URL(url)` without a base. The examples use `http://localhost:8000/examples/...`, so open them on `localhost:8000`, not `127.0.0.1` or another port, or they count as cross-origin.
+- Versioning: the major version is the page format. Bump it (new `rw-reader-N/` folder, new `rw-page-format`) only when existing pages stop working with the new reader, e.g. the reader needs DOM a page doesn't have. Everything else is a minor or patch release that site owners install by replacing the folder, so the reader must keep working with every page of the current format. On a major bump, update the examples' paths and meta (the round-trip tests ignore the generator meta's version). Pages without `rw-page-format` are format 1.
 - Do not test in the browser yourself. Verify with `node --check`, `npm run build` and curl against the dev server, then let the user test in the browser.
 
 ## Commands
 
-- `npm run dev`: dev server on port 8000 (override with `PORT`). `dist/rw-reader/` bundles and all of `dist/rw-tool/` are rebuilt in memory on every request, unminified and with sourcemaps, at the same URLs as production. Only themes and images are copied to disk.
-- `npm run build`: production build into `dist/rw-reader/` and `dist/rw-tool/` (minified). Rebuild after every reader pin bump.
+- `npm run dev`: dev server on port 8000 (override with `PORT`). `dist/rw-reader-<major>/` bundles and all of `dist/rw-tool/` are rebuilt in memory on every request, unminified and with sourcemaps, at the same URLs as production. Only themes and images are copied to disk.
+- `npm run build`: production build into `dist/rw-reader-<major>/` and `dist/rw-tool/` (minified). Rebuild after every reader pin bump.
 - `npm test`: generator tests.
 - `npm run preview`: build, then serve the repo with `python3 -m http.server 8000`.

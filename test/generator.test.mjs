@@ -20,13 +20,15 @@ import { JSDOM } from 'jsdom'
 import { parse } from '../generator/parse.js'
 import { generate } from '../generator/generate.js'
 import { createModel } from '../generator/model.js'
+import { PAGE_FORMAT, VERSION } from '../generator/version.js'
 
 const { DOMParser } = new JSDOM('').window
 
 const example = name => readFileSync(new URL(`../examples/${name}`, import.meta.url), 'utf8')
 
-// HTML comments are not part of the model.
+// HTML comments are not part of the model, and the generator meta changes with every release.
 const withoutComments = html => html.replace(/<!--[\s\S]*?-->/g, '')
+    .replace(/<meta name="generator" content="RW Page Builder [^"]*">/, '<meta name="generator">')
 
 for (const name of ['hdoc.html', 'cdoc.html', 'condoc.html']) {
     test(`round-trips examples/${name}`, () => {
@@ -45,7 +47,7 @@ test('reads the fields of the HDOC example', () => {
     const model = parse(example('hdoc.html'), DOMParser)
     assert.equal(model.type, 'hdoc')
     assert.equal(model.header.author, 'Example Author')
-    assert.equal(model.site.assetsUrl, '../dist/rw-reader/')
+    assert.equal(model.site.assetsUrl, '../dist/rw-reader-1/')
     assert.equal(model.site.theme, 'light')
     assert.equal(model.connections.length, 2)
     assert.ok(model.contentHtml.startsWith('<p>This page is an Embedded HDOC'))
@@ -116,4 +118,24 @@ test('writes the direct origins on the reader script tag and reads them back', (
 
     model.site.directOrigins = '  '
     assert.ok(!generate(model).includes('data-direct-origins'))
+})
+
+test('writes the version and page format, and reads the format back', () => {
+    const model = createModel('hdoc')
+    model.header.h1 = 'T'
+    const html = generate(model)
+    assert.ok(html.includes(`<meta name="generator" content="RW Page Builder ${VERSION}">`))
+    assert.ok(html.includes(`<meta name="rw-page-format" content="${PAGE_FORMAT}">`))
+    assert.equal(parse(html, DOMParser).pageFormat, PAGE_FORMAT)
+    assert.equal(parse(html.replace(`content="${PAGE_FORMAT}"`, 'content="7"'), DOMParser).pageFormat, 7)
+})
+
+test('pages without a format marker are format 1', () => {
+    const html = example('hdoc.html').replace(/\s*<meta name="rw-page-format"[^>]*>/, '')
+    assert.equal(parse(html, DOMParser).pageFormat, 1)
+})
+
+test('the version matches package.json', () => {
+    const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+    assert.equal(VERSION, pkg.version)
 })

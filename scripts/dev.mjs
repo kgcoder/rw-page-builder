@@ -1,4 +1,4 @@
-// Dev server: serves the repo root, and builds dist/rw-reader/ and dist/rw-tool/ in memory
+// Dev server: serves the repo root, and builds dist/rw-reader-<major>/ and dist/rw-tool/ in memory
 // (unminified, with sourcemaps) on every request, so edits in adapter/ or reader/ only need a reload.
 import * as esbuild from 'esbuild'
 import { copyStaticAssets, esbuildOptions, root } from './common.mjs'

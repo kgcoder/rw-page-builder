@@ -1,6 +1,7 @@
 {
   "name": "rw-page-builder",
   "private": true,
+  "version": "1.0.0",
   "type": "module",
   "description": "Build static HTML pages for Reader's Web documents (HDOC, CDOC, CONDOC) that show the reader UI without the extension.",
   "license": "MIT",

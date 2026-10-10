@@ -15,6 +15,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // The form. It's rebuilt from the model when a document is opened or its type changes;
 // typing only updates the model.
+import { READER_FOLDER } from '../generator/version.js'
 import { createBlockEditor } from './blocks/editor.js'
 import { markdownToHtml } from './blocks/markdown.js'
 import { emptySvg } from './cdoc/collage.js'
@@ -317,8 +318,8 @@ function appearanceSection(model, actions) {
                     changed(true)
                 },
             }, 'Use site settings')),
-        field('Reader assets URL', textInput(() => site.assetsUrl, v => { site.assetsUrl = v.trim() }, { placeholder: '/rw-reader/' }),
-            'Where the rw-reader/ folder is on your site.'),
+        field('Reader assets URL', textInput(() => site.assetsUrl, v => { site.assetsUrl = v.trim() }, { placeholder: '/' + READER_FOLDER + '/' }),
+            'Where the ' + READER_FOLDER + '/ folder is on your site.'),
         h('div', { class: 'row' },
             field('Theme', select(THEMES, () => site.theme, v => { site.theme = v })),
             field('Font set', select(FONT_SETS, () => site.fontSet, v => { site.fontSet = v }))),
@@ -467,7 +468,7 @@ function serviceFields(model, set) {
         field('Comments bridge URL', input('bridgeUrl', { type: 'url', placeholder: 'https://<project id>.supabase.co/functions/v1/rw-comments', spellcheck: 'false' }),
             'Loads the comments from the service and returns them in the Reader\'s Web format (proxy/supabase/functions/rw-comments in this project).'),
         field('Comment form page', input('formPageUrl', { type: 'url', spellcheck: 'false' }),
-            'rw-reader/' + PROVIDERS[settings.provider].formPath + ' on your site. '
+            READER_FOLDER + '/' + PROVIDERS[settings.provider].formPath + ' on your site. '
             + (isDisqus ? 'Its domain must be a trusted domain of the forum in Disqus.' : 'Its domain must be allowed in the Hyvor Talk console.')),
         h('div', { class: 'inline-buttons' }, status, addOriginButton),
     ]

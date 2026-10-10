@@ -22,8 +22,10 @@ export function pageHtml(p) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>${p.pageTitle}</title>
+    <meta name="generator" content="RW Page Builder ${p.version}">
+    <meta name="rw-page-format" content="${p.pageFormat}">
 
-    <!-- Reader's Web reader UI, loaded from the uploaded rw-reader/ folder. -->
+    <!-- Reader's Web reader UI, loaded from the uploaded rw-reader-N/ folder. -->
     <link rel="stylesheet" href="${p.assetsUrl}rw-reader.css">
     <link rel="stylesheet" href="${p.assetsUrl}themes/${p.theme}.css">
     <script defer src="${p.assetsUrl}rw-reader.js" data-font-set="${p.fontSet}"${p.scriptExtraAttrs}></script>

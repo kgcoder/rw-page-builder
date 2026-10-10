@@ -14,6 +14,7 @@ https://github.com/kgcoder/readers-web-specs
 
 
 // Problems shown above the form. Errors block saving (the page wouldn't work); warnings don't.
+import { PAGE_FORMAT, READER_FOLDER } from '../generator/version.js'
 
 // Mirrors the forbidden tags in sanitizeHtml (reader/helpers.js). The tool can't import that module
 // without bundling the whole reader, so keep this list in sync by hand.
@@ -37,6 +38,14 @@ export function validate(model, flinkResults) {
 
     if (!model.header.h1.trim()) errors.push('Title is required.')
     if (!model.site.assetsUrl.trim()) errors.push('Reader assets URL is required.')
+
+    if (model.pageFormat < PAGE_FORMAT) {
+        warnings.push('This page was made for an older reader (page format ' + model.pageFormat + '). Saving writes it in format '
+            + PAGE_FORMAT + ', which needs the ' + READER_FOLDER + '/ folder: check the reader assets URL.')
+    } else if (model.pageFormat > PAGE_FORMAT) {
+        warnings.push('This page was made by a newer version of the page builder (page format ' + model.pageFormat
+            + '). Saving it here writes it in the older format ' + PAGE_FORMAT + ' and may lose parts of it.')
+    }
 
     if (model.type === 'hdoc') {
         if (!model.contentHtml.trim()) warnings.push('The content is empty.')

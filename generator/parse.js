@@ -50,6 +50,7 @@ export function parse(html, DOMParserImpl) {
     if (model.type !== 'hdoc' || !model.lang) model.lang = htmlEl.getAttribute('lang') || ''
     const titleEl = doc.querySelector('title')
     model.pageTitle = titleEl ? titleEl.textContent : ''
+    model.pageFormat = readPageFormat(doc)
 
     readSiteSettings(model.site, doc)
     model.site.headCode = readHeadCode(html)
@@ -82,6 +83,13 @@ function readHdoc(model, doc, script) {
 
     const contentEl = doc.querySelector('.hdoc-content')
     model.contentHtml = contentEl ? contentEl.innerHTML.trim() : ''
+}
+
+// Pages written before the format was marked are format 1.
+function readPageFormat(doc) {
+    const meta = doc.querySelector('meta[name="rw-page-format"]')
+    const format = meta ? parseInt(meta.getAttribute('content'), 10) : 1
+    return format > 0 ? format : 1
 }
 
 // Read from the HTML text rather than the DOM, so the code comes back exactly as it was written.

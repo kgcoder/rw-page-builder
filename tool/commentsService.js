@@ -14,7 +14,7 @@ https://github.com/kgcoder/readers-web-specs
 
 // Comments from a commenting service, through the comments bridge
 // (proxy/supabase/functions/rw-comments/). The page only stores the resulting URLs (the comments URL
-// points at the bridge, "Leave a comment" at the service's form page in rw-reader/comments/), so
+// points at the bridge, "Leave a comment" at the service's form page in rw-reader-N/comments/), so
 // the tool reads the service settings back from them.
 //
 // settings: {provider, bridgeUrl, account, ident, formPageUrl, title}. account is the Disqus short

@@ -1,12 +1,13 @@
 // Shared by build.mjs and dev.mjs so dev and production produce the same files at the same URLs.
-import { cpSync, mkdirSync, readdirSync, readFileSync } from 'node:fs'
+import { cpSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { READER_FOLDER, VERSION } from '../generator/version.js'
 
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 export const distDir = join(root, 'dist')
-// The reader bundle that site owners upload.
-export const readerDir = join(distDir, 'rw-reader')
+// The reader bundle that site owners upload, named after the major version (rw-reader-1/).
+export const readerDir = join(distDir, READER_FOLDER)
 
 // Lists the tool offers in its theme and font set selects, read from the reader so they stay in sync.
 function themeNames() {
@@ -28,11 +29,11 @@ function fontSets() {
 export const esbuildOptions = {
     absWorkingDir: root,
     entryPoints: [
-        { in: 'adapter/startup.js', out: 'rw-reader/rw-reader' },
-        { in: 'adapter/styles.css', out: 'rw-reader/rw-reader' },
+        { in: 'adapter/startup.js', out: READER_FOLDER + '/rw-reader' },
+        { in: 'adapter/styles.css', out: READER_FOLDER + '/rw-reader' },
         // Comment form pages for comments services (opened in the reader's comment popup).
-        { in: 'adapter/comments/disqus.html', out: 'rw-reader/comments/disqus' },
-        { in: 'adapter/comments/hyvor.html', out: 'rw-reader/comments/hyvor' },
+        { in: 'adapter/comments/disqus.html', out: READER_FOLDER + '/comments/disqus' },
+        { in: 'adapter/comments/hyvor.html', out: READER_FOLDER + '/comments/hyvor' },
         // The page builder tool (dist/rw-tool/), optional for site owners.
         { in: 'tool/main.js', out: 'rw-tool/rw-tool' },
         { in: 'tool/tool.css', out: 'rw-tool/rw-tool' },
@@ -53,6 +54,10 @@ export const esbuildOptions = {
     // reader/Icons.js falls back to import.meta.url only when getAssetsUrl() returns null;
     // our adapter always derives it from the script's src.
     logOverride: { 'empty-import-meta': 'silent' },
+    banner: {
+        js: `/*! RW Page Builder ${VERSION} | MIT | https://github.com/kgcoder/rw-page-builder */`,
+        css: `/*! RW Page Builder ${VERSION} | MIT | https://github.com/kgcoder/rw-page-builder */`,
+    },
     define: {
         RW_THEMES: JSON.stringify(themeNames()),
         RW_FONT_SETS: JSON.stringify(fontSets()),
@@ -64,4 +69,5 @@ export function copyStaticAssets() {
     mkdirSync(readerDir, { recursive: true })
     cpSync(join(root, 'reader', 'themes'), join(readerDir, 'themes'), { recursive: true })
     cpSync(join(root, 'reader', 'images'), join(readerDir, 'images'), { recursive: true })
+    writeFileSync(join(readerDir, 'VERSION'), VERSION + '\n')
 }

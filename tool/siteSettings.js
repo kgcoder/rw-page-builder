@@ -20,6 +20,7 @@ https://github.com/kgcoder/readers-web-specs
 //
 // A document either uses the site settings (model.useSite: they're copied into it whenever they change)
 // or keeps its own (an opened page whose settings differ, or one the user customized).
+import { READER_FOLDER } from '../generator/version.js'
 import { SITE_PANEL_KEYS } from './panelsEditor.js'
 
 const STORAGE_KEY = 'rw-page-builder.site'
@@ -31,7 +32,7 @@ let serverSite = null
 const listeners = []
 
 function defaultSite() {
-    return { assetsUrl: '/rw-reader/', theme: 'light', fontSet: 'default', commentsLabel: '', proxyUrl: '', directOrigins: '', lang: 'en', headCode: '', commentsBridgeUrl: '', disqusShortname: '', hyvorWebsiteId: '', panels: {} }
+    return { assetsUrl: '/' + READER_FOLDER + '/', theme: 'light', fontSet: 'default', commentsLabel: '', proxyUrl: '', directOrigins: '', lang: 'en', headCode: '', commentsBridgeUrl: '', disqusShortname: '', hyvorWebsiteId: '', panels: {} }
 }
 
 export function getSite() {

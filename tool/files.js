@@ -16,6 +16,7 @@ https://github.com/kgcoder/readers-web-specs
 // Opening existing pages and saving the generated one.
 import { generate } from '../generator/generate.js'
 import { parse } from '../generator/parse.js'
+import { PAGE_FORMAT } from '../generator/version.js'
 import { modelMatchesSite } from './siteSettings.js'
 import { getFileName, getModel, markSaved, setModel } from './state.js'
 
@@ -56,6 +57,8 @@ export function saveFile() {
     link.click()
     link.remove()
     setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+    // generate() wrote the current format, so the "older format" warning no longer applies.
+    model.pageFormat = PAGE_FORMAT
     markSaved(name)
     return name
 }
