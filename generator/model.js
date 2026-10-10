@@ -46,6 +46,8 @@ export function createSiteSettings() {
         theme: 'light',
         fontSet: 'default',
         commentsLabel: '',
+        // The site's proxy for connected documents and comments on other sites (data-proxy-url).
+        proxyUrl: '',
         // Code added to the page's <head> as is (e.g. an analytics snippet).
         headCode: '',
     }

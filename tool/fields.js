@@ -45,6 +45,15 @@ export function headCodeField(get, set, notify) {
         'Added as is to every page, just before </head>: e.g. a Google Analytics snippet. Not run in the preview.')
 }
 
+// The site's proxy for connected documents and comments on other sites (data-proxy-url).
+export function proxyUrlField(get, set, notify) {
+    return field('Proxy URL',
+        textInput(get, v => set(v.trim()), notify, { placeholder: 'https://…/rw-proxy', spellcheck: 'false' }),
+        'Loads connected documents and comments from other sites through your proxy: it gets target_url and source_url '
+        + 'query parameters, or {url} and {source} in the URL are replaced. Leave empty to suggest the extension instead. '
+        + 'Code added to <head> can define window.rwReaderFetch for any other kind of request (not run in the preview).')
+}
+
 // options: [{id, label}]. A current value that isn't in the list (e.g. from a page made with another
 // reader version) is kept as an extra option.
 export function select(options, get, set, notify) {

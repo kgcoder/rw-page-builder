@@ -39,6 +39,8 @@ export function generate(model) {
         const id = model.type === 'cdoc' ? 'cdoc-source' : 'condoc-source'
         const source = model.type === 'cdoc' ? buildCdocSource(model) : buildCondocSource(model)
         mainContent = `<script type="application/json" style="display:none;" id="${id}">{"source": ${escapeJsonForScript(JSON.stringify(source))}}</script>`
+        // Hidden by the reader's CSS; the reader shows it when the main document can't be loaded.
+        if (model.type === 'condoc') mainContent += '\n                                <a id="MainDocDownloadLink">Download main document</a>'
     }
 
     return pageHtml({
@@ -47,7 +49,7 @@ export function generate(model) {
         assetsUrl: escapeHtml(assetsUrl),
         theme: escapeHtml(site.theme || 'light'),
         fontSet: escapeHtml(site.fontSet || 'default'),
-        scriptExtraAttrs: site.commentsLabel ? ` data-comments-label="${escapeHtml(site.commentsLabel)}"` : '',
+        scriptExtraAttrs: scriptExtraAttrs(site),
         headCode: headCodeHtml(site.headCode),
         h1: escapeHtml(model.header.h1),
         mainDivClass,
@@ -58,6 +60,14 @@ export function generate(model) {
         bottom: bottomPanel(panels),
         dataScript,
     })
+}
+
+// Optional attributes of the reader's <script> tag.
+function scriptExtraAttrs(site) {
+    let attrs = ''
+    if (site.commentsLabel) attrs += ` data-comments-label="${escapeHtml(site.commentsLabel)}"`
+    if (site.proxyUrl) attrs += ` data-proxy-url="${escapeHtml(site.proxyUrl)}"`
+    return attrs
 }
 
 // The site's own code (e.g. analytics), written as is between marker comments so parse() can read it back.

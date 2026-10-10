@@ -101,6 +101,7 @@ function readSiteSettings(site, doc) {
         site.assetsUrl = src.slice(0, src.length - 'rw-reader.js'.length)
         site.fontSet = script.getAttribute('data-font-set') || 'default'
         site.commentsLabel = script.getAttribute('data-comments-label') || ''
+        site.proxyUrl = script.getAttribute('data-proxy-url') || ''
         break
     }
 

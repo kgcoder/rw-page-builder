@@ -14,7 +14,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 |------|---------|
 | [reader/](reader/) | Git submodule [kgcoder/rw-reader-ui](https://github.com/kgcoder/rw-reader-ui), shared with the extension and the plugin. Its own rules: [reader/CLAUDE.md](reader/CLAUDE.md), interface: [reader/docs/host-adapter.md](reader/docs/host-adapter.md). |
 | [adapter/startup.js](adapter/startup.js) | Bundle entry: sets `g.hostAdapter`, imports `reader/readerStartUp.js`. |
-| [adapter/HostAdapter.js](adapter/HostAdapter.js) | This host's `g.hostAdapter`. Reads its config from the `<script>` tag (`data-font-set`, `data-comments-label`; `assetsUrl` = `images/` next to the script). `window.vcReaderData` overrides it. |
+| [adapter/HostAdapter.js](adapter/HostAdapter.js) | This host's `g.hostAdapter`. Reads its config from the `<script>` tag (`data-font-set`, `data-comments-label`, `data-proxy-url`; `assetsUrl` = `images/` next to the script). `window.vcReaderData` overrides it. [adapter/proxy.js](adapter/proxy.js) (pure, tested) builds the proxy request URL. |
 | [adapter/styles.css](adapter/styles.css) | CSS bundle entry (reader CSS + [adapter/reader.css](adapter/reader.css) host overrides). Themes are linked separately per page. |
 | [examples/](examples/) | Hand-written HDOC, CDOC and CONDOC pages, connected to each other. The DOM is copied from the plugin's `templates/reader-template.php`. |
 | [generator/](generator/) | Pure modules shared by the tool and a later CLI: `generate(model)` → page HTML, `parse(html, DOMParser)` → model. The page skeleton is [generator/template.js](generator/template.js); keep it in sync with `examples/`. |
@@ -36,7 +36,7 @@ The **RW Reader** Chrome extension is the primary Reader's Web client. When the 
 - Do not use optional chaining or nullish coalescing (the bundle targets es2019).
 - New JS files start with the license header used in [generator/model.js](generator/model.js) ("RW Page Builder", Copyright (c) 2026 Karen Grigorian, MIT, Reader's Web CC BY-ND 4.0 note). Files in `reader/` keep their own "RW Reader UI" header.
 - The bundle is **IIFE**, loaded with a classic `<script defer>`, not `type="module"`. The adapter reads `document.currentScript` at module evaluation time; that only works in a classic script.
-- `fetchWebPage` (cross-origin requests only) shows a popup (`showCrossOriginPopup` in the adapter) linking to the extension in the Chrome Web Store: a static host has no proxy. Same-host connections are fetched directly by `reader/NetworkManager.js`.
+- `fetchWebPage` (cross-origin requests only) uses the site's `window.rwReaderFetch` if it's defined, then the proxy URL (`data-proxy-url`). If neither is set, or the proxy answers 403, it shows a popup (`showCrossOriginPopup` in the adapter) linking to the extension in the Chrome Web Store. `shouldBlockCrossOriginCommentsRequests` is a getter, `false` when either is set. Same-host connections are fetched directly by `reader/NetworkManager.js`. [proxy/supabase/functions/rw-proxy/](proxy/supabase/functions/rw-proxy/) is an example proxy (Supabase Edge Function), not part of the build.
 - Connection URLs and CONDOC `<main>` URLs must be **absolute**. The reader does `new URL(url)` without a base. The examples use `http://localhost:8000/examples/...`, so open them on `localhost:8000`, not `127.0.0.1` or another port, or they count as cross-origin.
 - Do not test in the browser yourself. Verify with `node --check`, `npm run build` and curl against the dev server, then let the user test in the browser.
 

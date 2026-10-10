@@ -23,7 +23,33 @@ The document itself goes into the page:
 | CDOC | `<script type="application/json" id="cdoc-source">{"source": "<cdoc>…</cdoc>"}</script>` |
 | CONDOC | `<script type="application/json" id="condoc-source">{"source": "<condoc>…</condoc>"}</script>` |
 
-Connection URLs must be absolute. Connections to pages on other sites can't be opened yet, because a static site has no proxy; the reader shows a popup instead, suggesting the [RW Reader extension](https://chromewebstore.google.com/detail/rw-reader/hlckcdbgknflkkciojgdbhomdnegimbm), which can load them.
+Connection URLs must be absolute. Browsers don't let a page load pages from other sites, so connected documents and comments on other sites need a [proxy](#proxy). Without one, the reader shows a popup suggesting the [RW Reader extension](https://chromewebstore.google.com/detail/rw-reader/hlckcdbgknflkkciojgdbhomdnegimbm), which can load them.
+
+### Proxy
+
+There are two ways to set one up. Both are checked in this order:
+
+1. **Your own code.** Define `window.rwReaderFetch` in the code added to `<head>`, or in a `.js` file it includes (one file for the whole site):
+
+   ```html
+   <script>
+   window.rwReaderFetch = async (url, options) => {
+       // options: {currentPageUrl, isForCondoc}
+       const params = new URLSearchParams({ target_url: url, source_url: options.currentPageUrl })
+       if (options.isForCondoc) params.set('is_for_condoc', '1')
+       const response = await fetch('https://<project id>.supabase.co/functions/v1/rw-proxy?' + params, {
+           headers: { 'apikey': '…' },   // only if your proxy needs keys or other headers
+       })
+       if (!response.ok) throw new Error('Proxy error ' + response.status)
+       return response.text()
+   }
+   </script>
+   ```
+
+   This example calls the [example proxy](#proxy) below; change the request to whatever your proxy expects. It resolves to the page's text and throws if the request fails. If it resolves to `null` or `undefined`, the reader treats the URL as not handled and moves on to the proxy URL.
+2. **A proxy URL** (`data-proxy-url` on the reader's `<script>` tag, or *Proxy URL* in the page builder). The reader sends a `GET` with `target_url` and `source_url` query parameters, plus `is_for_condoc=1` when it loads a CONDOC's main page. If the proxy URL contains `{url}`, `{source}` or `{condoc}` (`1` or `0`), those are replaced instead (e.g. `https://proxy.example/?u={url}`). The proxy returns the page as is, allows your site in CORS, and responds with an error status if it can't fetch the page. A 403 means the URL isn't allowed, and the reader then suggests the extension.
+
+[proxy/supabase/functions/rw-proxy/index.ts](proxy/supabase/functions/rw-proxy/index.ts) is a proxy for Supabase Edge Functions (Deno). It only fetches the URLs listed in its `ALLOWED_URLS`, plus `ALLOWED_CONDOC_URLS` for CONDOC main pages. [proxy/supabase/config.toml](proxy/supabase/config.toml) turns off the key check, so pages can call it without keys. Deploy it from the `proxy/` folder with `npx supabase functions deploy rw-proxy --project-ref <project id>`, then use `https://<project id>.supabase.co/functions/v1/rw-proxy` as the proxy URL.
 
 ## Development
 
@@ -51,7 +77,7 @@ In dev mode the bundle is rebuilt in memory on each request, so edits in `adapte
 - **Connections.** Flinks are made in the RW Reader extension and pasted into a connection, one per line. When you edit an HDOC's content, its flinks follow the text they point at; a flink whose text was changed or removed is kept and marked "Not found".
 - **Opening pages.** Open an existing page from a file, a URL, or by dropping it on the window, edit it and save it again. The page is the source of truth: nothing is stored anywhere else.
 - **Preview.** The page is shown with the real reader as you type.
-- **Site settings** (toolbar: *Site settings*): the reader assets URL, theme, font set, default language, code added to every page's `<head>` (e.g. a Google Analytics snippet; it isn't run in the preview), and the top, sidebar and bottom panels. New documents use them, and so does every document that was made with them; a page with different settings keeps its own until you choose *Use site settings*. Previous/next links and comments are set per document.
+- **Site settings** (toolbar: *Site settings*): the reader assets URL, theme, font set, default language, [proxy URL](#proxy), code added to every page's `<head>` (e.g. a Google Analytics snippet; it isn't run in the preview), and the top, sidebar and bottom panels. New documents use them, and so does every document that was made with them; a page with different settings keeps its own until you choose *Use site settings*. Previous/next links and comments are set per document.
 
 Site settings are saved in your browser. *Copy rw-site.json* copies them, ready to paste into a new `rw-site.json` file created in the `rw-tool/` folder on your site (e.g. with your host's file manager); *Export rw-site.json* downloads the same file. With `rw-site.json` there, the tool loads it automatically, so every browser starts with the same settings. If a browser already has different settings, they're kept, and the tool offers to use the file instead.
 

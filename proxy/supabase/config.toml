@@ -1,0 +1,5 @@
+# Supabase CLI settings for deploying the example proxy (run the CLI from the proxy/ folder).
+
+[functions.rw-proxy]
+# Pages call the proxy without keys; ALLOWED_URLS in the function limits what it fetches.
+verify_jwt = false

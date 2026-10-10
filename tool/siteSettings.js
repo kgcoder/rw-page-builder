@@ -31,7 +31,7 @@ let serverSite = null
 const listeners = []
 
 function defaultSite() {
-    return { assetsUrl: '/rw-reader/', theme: 'light', fontSet: 'default', commentsLabel: '', lang: 'en', headCode: '', panels: {} }
+    return { assetsUrl: '/rw-reader/', theme: 'light', fontSet: 'default', commentsLabel: '', proxyUrl: '', lang: 'en', headCode: '', panels: {} }
 }
 
 export function getSite() {
@@ -138,7 +138,7 @@ export function importSite(file) {
 // Takes the known fields from parsed JSON, with defaults for missing or wrong ones.
 function normalizeSite(data) {
     const result = defaultSite()
-    for (const key of ['assetsUrl', 'theme', 'fontSet', 'commentsLabel', 'lang', 'headCode']) {
+    for (const key of ['assetsUrl', 'theme', 'fontSet', 'commentsLabel', 'proxyUrl', 'lang', 'headCode']) {
         if (typeof data[key] === 'string') result[key] = data[key]
     }
     if (data.panels && typeof data.panels === 'object' && !Array.isArray(data.panels)) {
@@ -155,7 +155,7 @@ function normalizeSite(data) {
 // Copies the site settings into a document (panels only for HDOC; post-nav and comments are per page).
 export function applySiteToModel(model) {
     const copy = JSON.parse(JSON.stringify(site))
-    model.site = { assetsUrl: copy.assetsUrl, theme: copy.theme, fontSet: copy.fontSet, commentsLabel: copy.commentsLabel, headCode: copy.headCode }
+    model.site = { assetsUrl: copy.assetsUrl, theme: copy.theme, fontSet: copy.fontSet, commentsLabel: copy.commentsLabel, proxyUrl: copy.proxyUrl, headCode: copy.headCode }
     for (const key of SITE_PANEL_KEYS) {
         if (copy.panels[key]) model.panels[key] = copy.panels[key]
         else delete model.panels[key]
@@ -168,6 +168,7 @@ export function modelMatchesSite(model) {
     const same = ['theme', 'fontSet'].every(key => ownSite[key] === site[key])
         && withSlash(ownSite.assetsUrl) === withSlash(site.assetsUrl)
         && (ownSite.commentsLabel || '') === (site.commentsLabel || '')
+        && (ownSite.proxyUrl || '') === (site.proxyUrl || '')
         && (ownSite.headCode || '').trim() === (site.headCode || '').trim()
     if (!same) return false
     if (model.type !== 'hdoc') return true

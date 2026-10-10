@@ -93,3 +93,15 @@ test('writes the site head code before </head> and reads it back', () => {
     model.site.headCode = '  '
     assert.ok(!generate(model).includes('rw-head-code'))
 })
+
+test('writes the proxy URL on the reader script tag and reads it back', () => {
+    const model = createModel('hdoc')
+    model.header.h1 = 'T'
+    model.site.proxyUrl = 'https://proxy.example/rw-proxy?u={url}&s={source}'
+    const html = generate(model)
+    assert.ok(html.includes('data-proxy-url="https://proxy.example/rw-proxy?u={url}&amp;s={source}"'))
+    assert.equal(parse(html, DOMParser).site.proxyUrl, model.site.proxyUrl)
+
+    model.site.proxyUrl = ''
+    assert.ok(!generate(model).includes('data-proxy-url'))
+})
