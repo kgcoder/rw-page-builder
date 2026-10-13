@@ -4,31 +4,15 @@ Build and publish [Reader's Web](https://github.com/kgcoder/readers-web-specs) d
 
 ## Publishing
 
-1. Build (or download) the `rw-reader-1/` folder and upload it to your site once, e.g. as `https://example.com/rw-reader-1/`. The number is the reader's major version; see [Versions](#versions).
-2. For each document, upload an HTML page that points at that folder. The [page builder](#page-builder) makes these pages; you can also write them by hand, like the ones in [examples/](examples/):
-
-```html
-<meta name="rw-page-format" content="1">   <!-- the major version the page was made for -->
-<link rel="stylesheet" href="/rw-reader-1/rw-reader.css">
-<link rel="stylesheet" href="/rw-reader-1/themes/light.css">   <!-- any file from rw-reader-1/themes/ -->
-<script defer src="/rw-reader-1/rw-reader.js" data-font-set="default"></script>
-…
-<div id="ui-root" class="theme-light">   <!-- must match the theme file -->
-```
-
-The document itself goes into the page:
-
-| Type | Where |
-|------|-------|
-| HDOC | Content in `#CurrentDocumentMainDiv.hdoc-content`, metadata (header, panels, connections) in `<script type="application/json" id="hdoc-data">` with `"forced": true`. |
-| CDOC | `<script type="application/json" id="cdoc-source">{"source": "<cdoc>…</cdoc>"}</script>` |
-| CONDOC | `<script type="application/json" id="condoc-source">{"source": "<condoc>…</condoc>"}</script>` |
-
-Connection URLs must be absolute. Browsers don't let a page load pages from other sites, so connected documents and comments on other sites need a [proxy](#proxy). Without one, the reader shows a popup suggesting the [RW Reader extension](https://chromewebstore.google.com/detail/rw-reader/hlckcdbgknflkkciojgdbhomdnegimbm), which can load them.
+1. Go to [Releases](https://github.com/kgcoder/rw-page-builder/releases), find the latest release and download the rw-page-builder-<version>.zip file. 
+2. Upload the archive to your site and unpack. You should end up with two folders: `rw-reader-1/` (The number is the reader's major version; see [Versions](#versions)), and `rw-tool/`.
+3. Go to `https://yoursite.com/rw-tool/` and use the [page builder](#page-builder) to create documents (HDOCs, CDOCs, CONDOCs). Then export document's source code an use it to create HTML file on your website. 
 
 ### Proxy
 
-There are two ways to set one up. Both are checked in this order:
+If you want to connect your document to a page from another website, keep in mind that browsers don't allow it by default, so connected documents on other sites need a proxy. Without one, the reader shows a popup suggesting the [RW Reader extension](https://chromewebstore.google.com/detail/rw-reader/hlckcdbgknflkkciojgdbhomdnegimbm), which can load them.
+
+There are two ways to set up a proxy endpoint. Both are checked in this order:
 
 1. **Your own code.** Define `window.rwReaderFetch` in the code added to `<head>`, or in a `.js` file it includes (one file for the whole site):
 
@@ -112,9 +96,3 @@ In dev mode the bundle is rebuilt in memory on each request, so edits in `adapte
 
 Site settings are saved in your browser. *Copy rw-site.json* copies them, ready to paste into a new `rw-site.json` file created in the `rw-tool/` folder on your site (e.g. with your host's file manager); *Export rw-site.json* downloads the same file. With `rw-site.json` there, the tool loads it automatically, so every browser starts with the same settings. If a browser already has different settings, they're kept, and the tool offers to use the file instead.
 
-## Later
-
-- **CLI.** The generator (`generator/`) is shared code with no UI, so a command-line tool for batch generation is mostly a small script.
-- **CDOC editor: lines and hyperlinks.** The collage editor makes frames, images and texts; lines and hyperlinks could come next.
-- **Cross-origin connections.** Site owners may run a proxy endpoint, on their site or on a service (Supabase, Firebase, etc.); restrictions such as allowed URLs are up to them, outside this project. Without a proxy endpoint, the current popup stays: it lists the documents that can't be loaded and links to the RW Reader extension.
-- **Preview isolation.** The preview runs in a frame on the tool's own origin, so a page opened in the tool could run scripts there. Fine for your own pages; to be revisited before the tool is offered publicly (e.g. on readersweb.org).
