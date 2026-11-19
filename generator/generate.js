@@ -39,7 +39,7 @@ export function generate(model) {
     } else {
         const id = model.type === 'cdoc' ? 'cdoc-source' : 'condoc-source'
         const source = model.type === 'cdoc' ? buildCdocSource(model) : buildCondocSource(model)
-        mainContent = `<script type="application/json" style="display:none;" id="${id}">{"source": ${escapeJsonForScript(JSON.stringify(source))}}</script>`
+        mainContent = `<script type="application/json" style="display:none;" id="${id}">{"source": ${escapeJsonForScript(JSON.stringify(source))}, "forced": true}</script>`
         // Hidden by the reader's CSS; the reader shows it when the main document can't be loaded.
         if (model.type === 'condoc') mainContent += '\n                                <a id="MainDocDownloadLink">Download main document</a>'
     }
