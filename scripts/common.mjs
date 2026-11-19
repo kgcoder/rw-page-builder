@@ -6,6 +6,13 @@ import { READER_FOLDER, VERSION } from '../generator/version.js'
 
 export const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 export const distDir = join(root, 'dist')
+
+// Every command (build, dev, preview) stops here if the two versions disagree.
+const packageVersion = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).version
+if (packageVersion !== VERSION) {
+    console.error(`Version mismatch: package.json has ${packageVersion}, generator/version.js has ${VERSION}. Make them equal.`)
+    process.exit(1)
+}
 // The reader bundle that site owners upload, named after the major version (rw-reader-1/).
 export const readerDir = join(distDir, READER_FOLDER)
 

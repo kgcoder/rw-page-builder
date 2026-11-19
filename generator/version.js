@@ -20,7 +20,7 @@ https://github.com/kgcoder/readers-web-specs
 // Each major has its own folder (rw-reader-1/, rw-reader-2/, ...), so pages of an older format keep
 // working with the old folder until they're regenerated.
 
-export const VERSION = '1.0.0'
+export const VERSION = '1.1.0'
 
 export const PAGE_FORMAT = Number(VERSION.split('.')[0])
 
