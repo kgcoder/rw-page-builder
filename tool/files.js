@@ -18,6 +18,7 @@ import { generate } from '../generator/generate.js'
 import { parse } from '../generator/parse.js'
 import { PAGE_FORMAT } from '../generator/version.js'
 import { modelMatchesSite } from './siteSettings.js'
+import { copyText } from './clipboard.js'
 import { getFileName, getModel, markSaved, setModel } from './state.js'
 
 // Throws with a readable message if the page isn't a Reader's Web document.
@@ -64,7 +65,7 @@ export function saveFile() {
 }
 
 export function copyHtml() {
-    return navigator.clipboard.writeText(generate(getModel()))
+    return copyText(generate(getModel()))
 }
 
 function slug(text) {

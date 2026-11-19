@@ -17,6 +17,7 @@ https://github.com/kgcoder/readers-web-specs
 // The work in progress is kept in this browser, so a reload doesn't lose it.
 import { emptySvg, parseCollage } from './collage.js'
 import { createCollageEditor } from './editor.js'
+import { copyText } from '../clipboard.js'
 
 const DRAFT_KEY = 'rw-page-builder.cdoc-draft'
 const $ = id => document.getElementById(id)
@@ -53,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     $('copy-button').addEventListener('click', () => {
-        navigator.clipboard.writeText(editor.getSvg())
+        copyText(editor.getSvg())
             .then(() => status('SVG copied'), err => status('Copy failed: ' + err.message, true))
     })
 })

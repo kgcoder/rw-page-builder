@@ -22,6 +22,7 @@ https://github.com/kgcoder/readers-web-specs
 // or keeps its own (an opened page whose settings differ, or one the user customized).
 import { READER_FOLDER } from '../generator/version.js'
 import { SITE_PANEL_KEYS } from './panelsEditor.js'
+import { copyText } from './clipboard.js'
 
 const STORAGE_KEY = 'rw-page-builder.site'
 export const SITE_FILE_NAME = 'rw-site.json'
@@ -108,7 +109,7 @@ export function siteJson() {
 }
 
 export function copySiteJson() {
-    return navigator.clipboard.writeText(siteJson())
+    return copyText(siteJson())
 }
 
 export function exportSite() {
